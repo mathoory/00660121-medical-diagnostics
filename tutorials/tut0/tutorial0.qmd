@@ -1,0 +1,209 @@
+---
+title: "Medical Diagnostics"
+subtitle: "Tutorial 5 (0): Intro<br><br>Spring 2025<br><br> Faculty of Biotechnology and Food Engineering<br> Technion Israel Institute of Technology"
+format:
+  revealjs: 
+    title-slide-attributes:
+      data-state: "hide-menubar"
+    slide-number: true
+    preview-links: auto
+    css: style.css
+    logo: assets/logo.png
+    footer: '00660121 - Medical Diagnostics '
+    simplemenu:
+      flat: true
+      barhtml:
+          header: "<div class='menubar'><ul class='menu'></ul></div>"
+      scale: 0.42
+revealjs-plugins:
+  - simplemenu
+---
+## Agenda {data-name="Intro"}
+1. About the course (Administration, Goals, etc...)
+2. ChaptGPT Do's and Don'ts
+3. Homework Assignments & Grading
+4. How to ~~survive~~ ace the course
+
+## About the course 
+::: incremental
+- Intro to Machine Learning (ML) and Deep Learning (DL)
+- 4 Weeks, Frontal
+- Pre-class videos
+- Paper-driven teaching
+- No midterm/exams: 2 HWs and a final project
+:::
+
+::: {.notes}
+- Demystify ML/DL
+- Very short, only 4 weeks, but very intensive. not enough time to make corrections.
+- The presentations are not meant to be a replacement for the tutorials. They are a teaching aid for the TA and are avilable for you on the moodle site to use if you wish.
+- No "question and answer" model, but rather a "open problem solving" model.
+:::
+
+
+## Tutorials Goals: YES
+::: incremental
+* **Learn:** concepts in Machine and Deep learning (ML/DL)
+* **Understand:** Data driven publications (some)
+  + How to read the docs (software documentation)
+  + How to leverage LLMs (Large Language Models)
+* **Implement:** methods described in literature to solve real-lab problems
+* **Evaluate:** modeling results
+* **Report:** your findings in a clear and concise manner
+:::
+
+::::{.notes}
+concepts such as supervised learning, unsupervised learning, reinforcement learning, neural networks, and deep learning architectures.
+:::
+
+## Tutorials Goals: NO
+* **Write :** code from scratch
+* **Use:** specific tools, libraries (pytorch, pandas, scikit-learn), software or frameworks
+
+:::{.footer}
+(I'm here to help, but they are not the main focus of the course)
+:::
+
+## About the Students
+
+<div style="text-align: center;">
+![](assets/year_degree.png)
+</div>
+
+(N=23)
+
+## Faculty 
+<div style="text-align: center;">
+![](assets/faculty.png)
+</div>
+
+## Background & Motivation
+::: {.fragment .center}
+![](assets/Backgrounds.png)
+:::
+
+::: {.fragment .center}
+![](assets/motivation.png)
+:::
+
+
+## About the TA (me)  {.smaller}
+
+**Mattan Hoory**
+
+::: {.column width="60%"}
+- *Past life*: QA → Developer (C-linux)  
+- *Plot twist*: B.Sc. in CS (+Bioinformatics)
+  + *iGEM* 2022 member · exchange at *National Taiwan University*  
+- *Now*: M.Sc. candidate in Prof. Roee Amit's lab
+- Courses I liked: Organic Chemistry, Labs (Genetics/Biomol), and of *course*, this one!
+- Passions: food, travel, history and languages!
+:::
+
+::: {.column width="30%"}
+![](assets/mattan.jpg)
+:::
+
+
+## Course History
+Spring 2025: first time this part of the course is taught
+<div style="text-align: center;">![](assets/timeline.png){width=110%}</div>
+
+## Course Resources {.smaller}
+- *Learning from Data: A Short Course*, Y. Abu-Mostafa (Caltech), M. Magdon-Ismail (RPI), H.-T. Lin (NTU)
+- *Introduction to Statistical Learning*, G. James, D. Witten, T. Hastie, R. Tibshirani ([link](https://www.statlearning.com/))
+- *Deep Learning*, I. Goodfellow, Y. Bengio, A. Courville
+- **ONLINE**
+
+::: {.column width="30%"}
+<div style="text-align: center;">
+![](assets/islp.png){height="300px"}
+</div>
+
+:::
+
+::: {.column width="30%"}
+<div style="text-align: center;">
+![](assets/learning_from_data.jpg){height="300px"}
+</div>
+
+:::
+
+::: {.column width="30%"}
+<div style="text-align: center;">
+![](assets/Deep_Learning.jpg){height="300px"}
+</div>
+
+:::
+
+## Homework & Grading {data-name="Homework"}
+In each assignment, we will implement methods based on a publication, evaluate it, and report our findings.
+
+Submission is **in pairs**!
+
+- HW total (35%): HW 1+2 (10%), final project: (25%)
+
+### Grading Breakdown of each HW:
+- **Report** (80%):
+  + Results (40%) / Explanation & Insight (40%)
+-  **Leaderboard Performance ** (up to 20%) 🏆 
+- **Bonus Points** (Optional)
+- **Penalties**
+
+::: {.notes}
+NO CHEATING
+NO LYING
+NO PLAGIARISM
+write the final solutions alone and understand them fully
+:::
+
+## Course challenges {data-name="Tips"}
++ Programming
++ Linear Algebra
++ New terminology
++ Semi-Heavy workload
+  - **2**xHws + **1**xProject
+
+:::{.notes}
+troubleshoot my way through new technical challenges with Google and our dear chatbots (e.g. ChatGPT and Copilot).
+
+didn’t need to understand all the underlying math to implement deep learning models.
+
+you can get by without breaking down every equation. If you understand the math, great! You may have better intuition for what’s happening under the hood. If it’s overwhelming, don’t let that stop you. Implement tutorials, and over time, you’ll grasp the concepts that matter for your work.
+
+What helped me was keeping a notebook (digital and physical) where I translated complex definitions into my own words. 
+
+Use Chrome bookmarks to save blog posts that explain things in a way that clicks. The more you immerse yourself, the more familiar these terms will become. Whatever you do, don’t let the initial unfamiliarity paralyse you. There was probably a time when limited resources were a problem. Now, we have the opposite issue: too much information.
+
+HW - strat early
+:::
+
+## ChatGPT (and other LLMs)
+- Code responsibility: you are responsible for the code you submit.
+- Tutor, not replacement 
+- Can't really think logically or analyze results well
+
+
+## How to get and ask for help
+- **Moodle forum** is the best way to get help, emails regarding HW will not be answered.
+- TA hours and workshops available on demand.
+  - I'm not going to read (all of) your code
+- If I speak too fast or too slow - please let me know.
+- Ask questions during/after the tutorials
+- My email: [hoory@campus.technion.ac.il](mailto:hoory@campus.technion.ac.il)
+
+
+## How to survive the course
+* Independent learning, but also asking for help when needed
+* Google and ChatGPT are your friends
+* Working with your actual friends
+
+::: {.incremental}
+1. Examine and understand the data
+2. Plan a model pipeline, only then start coding
+3. Run the code, and then debug it
+4. Repeat
+:::
+
+## Questions?
+![](assets/meme.jpg){.absolute left=0 right=0 bottom=0 top=120 height="80%" style="margin: auto auto;"}
