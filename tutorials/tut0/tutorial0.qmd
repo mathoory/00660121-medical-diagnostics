@@ -70,7 +70,7 @@ concepts such as supervised learning, unsupervised learning, reinforcement learn
 ![](assets/year_degree.png)
 </div>
 
-(N=23)
+(N=29)
 
 ## Faculty 
 <div style="text-align: center;">
@@ -139,7 +139,7 @@ Spring 2025: first time this part of the course is taught
 ## Homework & Grading {data-name="Homework"}
 In each assignment, we will implement methods based on a publication, evaluate it, and report our findings.
 
-Submission is **in pairs**!
+Submission is **in pairs**, sophisticated libraries not allowed (Ask)
 
 - HW total (35%): HW 1+2 (10%), final project: (25%)
 
