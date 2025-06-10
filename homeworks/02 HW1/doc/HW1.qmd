@@ -129,6 +129,10 @@ Implement this part yourself (a full 'training-loop' like what we have seen in t
 
 *3.3.2* Report the best **final test MSE** and **Pearson correlation** (one number each). Mention any changes you made to the model or training process that improved the results.
 
+*3.3.3* Plot the **predicted vs true values** for the test set. Add a line $y=x$ to the plot, and explain what it means.
+
+*3.3.4* (Optional Bonus) What is the difference betweeen Pearson correlation and MSE? When would you use one over the other? How do they relate to each other?
+
 ### Task 4 – From Regression to a "Toy" Classifier
 One of the possible **downstream tasks** of gene-expression models is to predict disease risk based on gene expression. You have already built a **linear regression** model to predict a continuous target gene expression value (scalar), in real clinics you often predict a *binary* outcome ("disease / no disease" - 0/1) rather than a raw gene-expression value. This is called binary classification. This correlation between prediction and clinical state could be based on clinical guidelines or expert knowledge for the specific disease and it's biomarkers. In practice you would not use LR, and instead apply dedicated classification models (logistic regression, trees, NN + soft-max) and loss functions (cross-entropy) which are used to predict probabilities and **are not required** for this task.
 
@@ -220,7 +224,7 @@ In essence, the goal of the report is to be a *concise* summary of your work, it
   - Include answers and results of all parts (1 – 5) in the report.
   - Include all plots and figures that help explain your results.
   - Use clear markers for each task and question.
-- **Length**: Maximum **3 pages** (excluding charts and figures).
+- **Length**: Maximum **3 pages** (excluding charts and figures, equations count towards length).
 - **Font**: Readable (e.g., Arial) with a minimum size of 11pt and standard margins.
 - **Explanations**: Provide clear, short explanations for your model choices, esp. if they diverge from what we've seen in class. Include any challenges you faced and how you solved them.
 - **Charts**: Include relevant charts and figures to illustrate your results. Make sure they are clear and labeled, and provide a brief explanation of how it relates to your results.
@@ -234,7 +238,7 @@ In essence, the goal of the report is to be a *concise* summary of your work, it
 | Written Report  | 30  |
 | Full implementation of the model (Sections 3.1-4)                              | 25  |
 | Written answers (3.5)                                                     | 25  |
-| Model performance (competative factor)                                       | 15  |
+| Model performance (competitive factor)                                       | 15  |
 | Results reproducibility                                                      | 5   |
 
 
