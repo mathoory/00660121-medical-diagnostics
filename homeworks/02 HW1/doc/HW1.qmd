@@ -57,8 +57,8 @@ Bioinformatics, Volume 32, Issue 12, June 2016, Pages 1832–1839
 ### Writing and running code
 To write and execute the code, you can use either **VScode** with an **Anaconda** environment, **Google Colab / Kaggle** , or any other environment you see fit. see HW0 for details.
 
-#### Anaconda (Instructions are also given in HW0, but here is a reminder)
-Environment is identicle to HW0, so you can use the same one.
+#### Anaconda 
+Instructions are also given in HW0, but here is a reminder.Environment is identicle to HW0, so you can use the same one.
 ```bash
 git clone https://github.com/mathoory/00660121-medical-diagnostics.git
 cd "00660121-medical-diagnostics\homeworks\02 HW1"
