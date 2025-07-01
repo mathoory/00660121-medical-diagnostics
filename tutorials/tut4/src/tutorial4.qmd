@@ -1,0 +1,89 @@
+---
+title: "Medical Diagnostics"
+subtitle: "Tutorial 4: Final Project<br><br>Spring 2025<br><br> Faculty of Biotechnology and Food Engineering<br> Technion Israel Institute of Technology <br><br> TA: Mattan Hoory"
+format:
+  revealjs: 
+    code-overflow: scroll
+    code-line-wrapping: true
+    title-slide-attributes:
+      data-state: "hide-menubar"
+    slide-number: true
+    preview-links: auto
+    css: style.css
+    logo: assets/logo.png
+    footer: '00660121 - Medical Diagnostics  '
+    toc: true
+    toc-depth: 1
+    simplemenu:
+      flat: true
+      barhtml:
+          header: "<div class='menubar'><ul class='menu'></ul></div>"
+      scale: 0.42
+
+revealjs-plugins:
+  - simplemenu
+---
+::: {.center}
+# 1 Intro
+:::
+## 1.1 משאל המרצה והמתרגל
+Open now!
+
+![](assets/questionair.png){fig-align="center" width=40%}
+	
+
+::: {.center}
+# 2 Course recap {data-name="Recap"}
+:::
+
+## 1.1 What is Machine Learning?
+
+## 1.2 What is Deep Learning?
+
+## 1.3 Linear Regression
+
+## 1.4 Gradient Descent
+
+## 1.5 Multi-Layer Perceptron
+
+::: {.center}
+# 3 Beyond the curriculum {data-name="Next Chapters"}
+:::
+
+## 3.1 Residual Neural Networks (Resnets)
+
+## 3.2 Recurrent Neural Networks (RNNs)
+
+## 3.3 Generative Adversarial Networks (GANs)
+
+## 3.4 Diffusion Models
+
+## 3.5 Transformers
+
+
+::: {.center}
+# 4 Exercise {data-name="Exercise"}
+:::
+
+## 4.1 Exercise Overview
+
+
+::: {.center}
+# 5 Final project {data-name="Final Project"}
+:::
+
+## 5.1 Project Overview
+## 5.2 Project Requirements
+## 5.3 Project Submission
+
+
+::: {.center}
+# 6 Conclusion
+:::
+
+## Conclouding Remarks
+
+## 6.2 משאל המרצה והמתרגל
+Open now!
+
+![](assets/questionair.png){fig-align="center" width=40%}

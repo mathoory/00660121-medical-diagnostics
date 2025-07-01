@@ -1,0 +1,424 @@
+---
+title: "Medical Diagnostics"
+subtitle: "Tutorial 7: CNN<br><br>Spring 2025<br><br> Faculty of Biotechnology and Food Engineering<br> Technion Israel Institute of Technology<br><br> TA: Mattan Hoory"
+format:
+  revealjs: 
+    code-overflow: scroll
+    code-line-wrapping: true
+    title-slide-attributes:
+      data-state: "hide-menubar"
+    slide-number: true
+    preview-links: auto
+    css: style.css
+    logo: assets/logo.png
+    footer: '00660121 - Medical Diagnostics  '
+    toc: true
+    toc-depth: 1
+    simplemenu:
+      flat: true
+      barhtml:
+          header: "<div class='menubar'><ul class='menu'></ul></div>"
+      scale: 0.42
+
+revealjs-plugins:
+  - simplemenu
+---
+::: {.center}
+# 1 Intro
+:::
+
+## משאל המרצה והמתרגל
+Open now!
+
+![](assets/questionair.png){fig-align="center" width=40%}
+
+::: {.center}
+# 2 Tutorial 2 recap {data-name="Recap"}
+MLP + Backpropagation
+:::
+
+## 3.1 Representing images as tensors
+- Images are represented as 3D tensors (height, width, channels)
+- Each pixel is represented by a value (e.g., grayscale) or multiple values (e.g., RGB channels)
+<div style="text-align: center;">
+![](assets/tensor.png){fig-align="center" width=45%}
+</div>
+
+## Flattening a 1D image
+<div style="text-align: center;">
+![](assets/flatten.png){fig-align="center" width=45%}
+</div>
+
+
+## 2.1 MLP
+- Example: classify if an image is "5" or "6"
+<div style="text-align: center;">
+![](assets/deep2.png)
+</div>
+
+## 2.1  Backpropagation
+- Used to compute gradients and update weights in neural networks.
+- Example (MSE): $\mathcal{L} = \frac{1}{N} \sum_{i=1}^N (y_i - \hat{y}_i)^2$
+<div style="text-align: center;">
+![](assets/backprop_diagram.png)
+</div>
+
+## 2.1 Training MLPs
+- Almost a fully working code :-)
+```{.python style="font-size: 1.2em;" code-line-numbers="|8|9|10|11|12|13|14|15"}
+import SGD
+import MSE
+
+def model(X):
+  ...
+  return Y
+
+def train(model, data, num_epochs=10):
+    for epoch in range(num_epochs):
+        for X, Y in data:
+            SGD.zero_grad()
+            Y_hat = model(X)
+            loss = MSE(Y_hat, Y)
+            loss.backward()
+            SGD.step()
+```
+
+
+::: {.center}
+# 3 Convolutional Neural Networks (CNN) {data-name="CNN"}
+Slides based on 236781 Deep learning course at the Technion (Dr. Haim Baskin)
+:::
+
+## 3.2 Images and MLP {.smaller}
+- MLPs (Multi-Layer Perceptrons) are fully connected networks
+- Each neuron in an MLP is connected to every pixel in the input image
+- MLPs struggle with high-dimensional data like images due to the large number of parameters - Nearby pixels statistically related
+  - 224x224 RGB image = 150,528 dimensions
+
+<div style="text-align: center;">
+![](assets/classification-using-mlp.png){fig-align="center" width=60%}
+</div>
+
+## 3.3 Convolution in 1D
+Convolution* in 1D
+- Input vector x:
+
+$$
+\mathbf{x}=\left[x_1, x_2, \ldots, x_I\right]
+$$
+
+- Output is weighted sum of neighbors:
+
+$$
+z_i=\omega_1 x_{i-1}+\omega_2 x_i+\omega_3 x_{i+1}
+$$
+
+- Convolutional kernel or filter:
+
+$$
+\boldsymbol{\omega}=\left[\omega_1, \omega_2, \omega_3\right]^T
+$$
+
+Kernel size $=3$
+
+## Convoulution in 1D example
+<div style="text-align: center;">
+![](assets/1d-example.png){fig-align="center" width=65%}
+</div>
+
+## Convolution in 1D (cont.)
+- **Parameter sharing**: The same filter is applied across the entire input, reducing the number of parameters.
+<div style="text-align: center;">
+![](assets/Picture1.png){fig-align="center" width=60%}
+</div>
+
+## Zeros padding
+- To maintain the same output size as input (not always), we can add zeros around the input vector.
+<div style="text-align: center;">
+![](assets/Picture2.png){fig-align="center" width=100%}
+</div>
+
+## Properties of convolutional filters
+- **Stride**: shift by k positions for each output
+  + Decreases size of output relative to input
+- **Kernel size**: weight a different number of inputs for each output
+  + Combine information from a larger area
+  + But kernel size 5 uses 5 parameters
+- **Dilation**: insert zeros between weights
+  + Combine information from a larger area
+  + Fewer parameters
+
+## Stride, Kernel Size, and Dilation
+![](assets/ksd-empty.png){width="100%"}
+
+## Stride, Kernel Size, and Dilation
+![](assets/ksd-full.png){width="100%"}
+
+## Fully connected vs. convolutional layers {.smaller}
+- Fully connected layers connect every input to every output, leading to a large number of parameters.
+- Convolutional layers use filters (kernels) to scan the input, sharing weights across space and reducing the number of parameters.
+Convolutional network:
+
+$$
+\begin{aligned}
+h_i & =\mathrm{a}\left[\beta+\omega_1 x_{i-1}+\omega_2 x_i+\omega_3 x_{i+1}\right] \\
+& =\mathrm{a}\left[\beta+\sum_{j=1}^3 \omega_j x_{i+j-2}\right]
+\end{aligned}
+$$
+
+
+Fully connected network:
+
+$$
+h_i=\mathrm{a}\left[\beta_i+\sum_{j=1}^D \omega_{i j} x_j\right]
+$$
+
+## Special case of fully-connected network
+<div style="text-align: center;">
+![](assets/Picture3.png){fig-align="center" width=90%}
+</div>
+
+## Two output channels
+- Convolutional layers can have multiple output channels (feature maps).
+- Each channel is produced by a different filter.
+- Prevents information loss and allows the network to learn different features.
+<div style="text-align: center;">
+![](assets/Picture4.png){fig-align="center" width=60%}
+</div>
+
+## Two input channels, one output channel {.smaller}
+- Convolutional layers can also handle multiple input channels (e.g., RGB images).
+- Each input channel is convolved with its own filter, and the results are summed to produce the output channel.
+- This allows the network to learn features from different input channels.
+<div style="text-align: center;">
+![](assets/Picture5.png){fig-align="center" width=30%}
+</div>
+
+## How many paramters?
+How many parameters?
+- If there are $C_i$ input channels and kernel size K
+
+$$
+\boldsymbol{\Omega} \in \mathbb{R}^{C_i \times K} \quad \boldsymbol{\beta} \in \mathbb{R}
+$$
+
+- If there are $C_i$ input channels and $C_o$ output channels
+
+$$
+\boldsymbol{\Omega} \in \mathbb{R}^{C_i \times C_o \times K} \quad \boldsymbol{\beta} \in \mathbb{R}^{C_o}
+$$
+
+## Receptive fields
+- The receptive field of a neuron is the region of the input that affects its output.
+<div style="text-align: center;">
+![](assets/Picture6.png){fig-align="center"}
+</div>
+
+## Classification using CNNs
+- Input: flattened image
+- Output: probabilities for each class
+
+<div style="text-align: center;">
+![](assets/Picture7.png){fig-align="center" width=65%}
+</div>
+
+## Results of classification using CNNs
+<div style="text-align: center;">
+![](assets/Picture8.png){fig-align="center"}
+</div>
+
+## 2D Convolution {.smaller}
+- Input image is a 2D matrix, and the filter is also a 2D $K\times K$ matrix.
+<iframe src="https://ezyang.github.io/convolution-visualizer/" width="1280" height="520" style="border: 1px solid #ccc" frameborder=0></iframe>
+
+## Convoulution in 2D example
+<div style="text-align: center;">
+![](assets/2d-example.png){fig-align="center"}
+</div>
+
+## Number of Parameters in 2D Convolution
+- If there are $C_i$ input channels and kernel size $\mathrm{K} \times \mathrm{K}$
+
+$$
+\boldsymbol{\omega} \in \mathbb{R}^{C_i \times K \times K} \quad \boldsymbol{\beta} \in \mathbb{R}
+$$
+
+- If there are $C_i$ input channels and $C_o$ output channels
+
+$$
+\boldsymbol{\omega} \in \mathbb{R}^{C_i \times C_o \times K \times K} \quad \boldsymbol{\beta} \in \mathbb{R}^{C_o}
+$$
+
+
+## Channel in 2D Convolution
+- Each channel in a 2D convolution corresponds to a different feature map.<div style="text-align: center;">
+![](assets/Picture9.png){fig-align="center"}
+</div>
+
+
+## Pooling
+- Pooling layers reduce the spatial dimensions of the input, retaining important features while reducing computational complexity.
+- No learnable parameters.
+
+<div style="text-align: center;">
+![](assets/pooling.png){fig-align="center" width="80%"}
+</div>
+
+## AlexNet (2012)
+- One of the first successful CNN architectures
+
+<div style="text-align: center;">
+![](assets/Picture10.png){fig-align="center" width="55%"}
+</div>
+
+## But what does the CNN "see"?
+<div style="text-align: center;">
+![](assets/feature_hierarchy.png){fig-align="center" width="60%"}
+</div>
+
+## But what does the CNN **really** "see"?
+<iframe src="https://adamharley.com/nn_vis/cnn/2d.html" width="1280" height="720" style="border: 1px solid #ccc" frameborder=0></iframe>
+
+## Data augmentation {.smaller}
+- Data augmentation is a technique to artificially increase the size of the training dataset by applying transformations to the original images.
+- Common transformations include rotation, scaling, flipping, and cropping.
+
+<div style="text-align: center;">
+![](assets/Picture11.png){fig-align="center" width="70%"}
+</div>
+
+
+## Bounding boxes (VGG16) example {.smaller}
+- Goal: characterize the ligation number of DNA origami nanostructures in transmission electron microscopy (TEM) images
+<div style="text-align: center;">
+![](assets/origami.webp){fig-align="center" width="50%"}
+</div>
+
+<div style="font-size: 0.6em;">
+[1] Characterizing DNA Origami Nanostructures in TEM Images Using Convolutional Neural Networks
+Xingfei Wei, Qiankun Mo, Chi Chen, Mark Bathe, and Rigoberto Hernandez
+Journal of Chemical Information and Modeling Article ASAP
+DOI: 10.1021/acs.jcim.5c00330
+</div>
+
+## One-Hot Encoding for DNA Sequences {.smaller}
+- One-hot encoding is a technique to represent categorical variables as binary vectors.
+- Each category is represented by a vector with a single 1 and the rest 0s.
+- For DNA sequences, each nucleotide (A, T, C, G) is represented by a unique vector.
+
+<div style="text-align: center;">
+![](assets/onehot.png){fig-align="center" width="90%"}
+</div>
+
+
+::: {.center}
+# 3 Residual Connections {data-name="Resnet"}
+:::
+
+## 3.1 Residual Connections
+- Residual connections allow gradients to flow more easily through the network.
+<div style="text-align: center;">
+![](assets/residual.png){fig-align="center" width="80%"}
+</div>
+
+
+## 3.2 U-Net 
+<div style="text-align: center;">
+![](assets/u-net-architecture.png){fig-align="center" width="80%"}
+</div>
+
+## 3.3 U-Net: Results
+<div style="text-align: center;">
+![](assets/unet-results.png){fig-align="center" width="80%"}
+</div>
+
+(A Complete Electron Microscopy Volume of the Brain of Adult Drosophila melanogaster)
+
+## U-net: Results
+<div style="text-align: center;">
+![](assets/hhmi_mito.png){fig-align="center" width="80%"}
+</div>
+- training the unet model on the HHMI mitochondria data can be performed, with subsequent prediction and visualization of the binary segmentation of mitochondria
+- [https://hpc.nih.gov/apps/unet.html](https://hpc.nih.gov/apps/unet.html)
+
+
+::: {.center}
+# 4 Code {data-name="Code"}
+:::
+
+## Lenet (LeCun, 1998)
+<div style="text-align: center;">
+![](assets/lenet.png){fig-align="center" width="80%"}
+</div>
+
+<div style="max-height: 300px; overflow-y: auto;">
+
+```{.python style="font-size: 1.2em;" code-line-numbers="|4,5,6,7,8,9,10|12,13,14,15,16,17,18|19,20,21,22,23" code-overflow="scroll" code-line-wrapping=true}
+class LeNet(nn.Module):
+    def __init__(self, in_channels=3):
+        super().__init__()
+        self.feature_extractor = nn.Sequential(
+            nn.Conv2d(in_channels, out_channels=6, kernel_size=5),
+            nn.ReLU(),
+            nn.MaxPool2d(2),
+            nn.Conv2d(in_channels=6, out_channels=16, kernel_size=5),
+            nn.ReLU(),
+            nn.MaxPool2d(2),
+        )
+        self.classifier = nn.Sequential(
+            nn.Linear(16*5*5, 120),  # Why 16*5*5 ?
+            nn.ReLU(), 
+            nn.Linear(120, 84), # (N, 120) -> (N, 84)
+            nn.ReLU(),
+            nn.Linear(84, 10)   # (N, 84)  -> (N, 10)
+        )
+    def forward(self, x):
+        features = self.feature_extractor(x)
+        features = features.view(features.size(0), -1)
+        class_scores = self.classifier(features)
+        return class_scores
+```
+
+</div>
+
+## Lenet (LeCun, 1998)
+
+```{.python style="font-size: 1.2em;"}
+class LeNet(nn.Module):
+    def __init__(self, in_channels=3):
+        super().__init__()
+        self.feature_extractor = nn.Sequential(
+            nn.Conv2d(in_channels, out_channels=6, kernel_size=5),
+            nn.ReLU(),
+            nn.MaxPool2d(2),
+            nn.Conv2d(in_channels=6, out_channels=16, kernel_size=5),
+            nn.ReLU(),
+            nn.MaxPool2d(2),
+        )
+        self.classifier = nn.Sequential(
+            nn.Linear(16*5*5, 120),  # Why 16*5*5 ?
+            nn.ReLU(), 
+            nn.Linear(120, 84), # (N, 120) -> (N, 84)
+            nn.ReLU(),
+            nn.Linear(84, 10)   # (N, 84)  -> (N, 10)
+        )
+    def forward(self, x):
+        features = self.feature_extractor(x)
+        features = features.view(features.size(0), -1)
+        class_scores = self.classifier(features)
+        return class_scores
+```
+
+## Training Lenet (LeCun, 1998)
+- Almost a fully working code
+- Almost identical to the MLP code from the previous tutorial
+```{.python style="font-size: 1.2em;" code-line-numbers="|2|3|4|5|6|7|8"}
+def train_lenet(model, data, loss_fn, optimizer, num_epochs=10):
+    for epoch in range(num_epochs):
+        for images, labels in train_loader:
+            optimizer.zero_grad()
+            outputs = model(images)
+            loss = criterion(outputs, labels)
+            loss.backward()
+            optimizer.step()
+```

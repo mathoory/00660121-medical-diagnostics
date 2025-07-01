@@ -10,6 +10,7 @@ format:
   jasa-html: default
 semester: Spring 2025
 submission-date: 24.6.25
+update-date: 12.6.25
 author:
   - name: Mattan Hoory
     acknowledgements: | 
@@ -58,7 +59,7 @@ Bioinformatics, Volume 32, Issue 12, June 2016, Pages 1832–1839
 To write and execute the code, you can use either **VScode** with an **Anaconda** environment, **Google Colab / Kaggle** , or any other environment you see fit. see HW0 for details.
 
 #### Anaconda 
-Instructions are also given in HW0, but here is a reminder.Environment is identicle to HW0, so you can use the same one.
+Instructions are also given in HW0, but here is a reminder. Environment is identicle to HW0, so you can use the same one.
 ```bash
 git clone https://github.com/mathoory/00660121-medical-diagnostics.git
 cd "00660121-medical-diagnostics\homeworks\02 HW1"
@@ -141,16 +142,26 @@ The goal is to see how model choice + decision threshold jointly influence downs
 
 The true target $y_{i}$ you used so far is assumed to be a quantitative **biomarker** measuring risk for a certain disease. We convert it to a binary label:
 
-*A.* For all of the data, compute the **median** of the target gene (across all samples).
+*A.* For all of the data, compute the **median** $m$ of the target gene (across all samples).
 
 *B.* Define 
-  $$\tilde y_{ij}= \begin{cases}
-  1 & \text{if } y_\text{binary} \ge \text{median}\\[2pt]
+  $$\tilde y_{i,\text{binary}} = \begin{cases}
+  1 & \text{if } y_i \ge m\\[2pt]
   0 & \text{otherwise}.
   \end{cases}$$ 
-(In real datasets you would get 0/1 labels from clinicians.)
 
-*C.* Write code to compute and save $Y_\text{binary}$, a vector of 0/1 labels for each sample, where $Y_\text{binary}[i] = \tilde y_{i}$ for the $i$-th sample.
+Where:
+
+- $Y$ is the vector of target gene expression values for all samples, i.e. $Y = [y_1, y_2, \ldots, y_n]$.
+- $y_i$ is the target gene expression value for sample $i$. ($Y[i] = y_i$)
+- $\tilde y_{i,\text{binary}}$ is the binary label for sample $i$.
+- $m$ is the median of the target gene expression values ($Y$) across all samples.
+
+*For example*, given: $Y= [1.2, 3.4, 2.5, 4.1, 2.0]$ we have $m=2.5$, so $y_2=3.4$ and $y_{2,\text{binary}}=1$, and in total the binary labels would be $Y_\text{binary}=[0, 1, 1, 1, 0]$.
+
+(In real datasets you would get 0/1 labels through medical records, but here we use instead a simple threshold based on the median value of the target gene expression.)
+
+*C.* Write code to compute and save $Y_\text{binary}$, a vector of 0/1 labels for each sample, where $Y_\text{binary}[i] = y_{i,\text{binary}}$ for the $i$-th sample.
 
 *D.* Modify your model the predict the binary label you just created $Y_\text{binary}$ which will be used as the ground-truth instead of the original continuous $Y$.
 
@@ -205,16 +216,21 @@ Answer concisely (1-2 lines) in your PDF report:
 8. Does the test set allow us to estimate our in-sample error?
 9. Would any split of the data into two disjoint subsets result in an equally useful train-test split?
 
+{{< pagebreak >}}
+
 ## Submission Guidelines
 Submit a single ZIP file with the following structure:
 
 ```
 HW1_ID1_ID2.zip
-├── src/                 # your python files
-│   ├── main.py or main.ipynb
+├── src/                 # your code files
+│   ├── e.g. main.py or main.ipynb
 │   ├── any other code files for reproducibility...
 └── report_ID1_ID2.pdf   # ≤ 3 pages + charts 
 ```
+
+**Do not include** the `gene_expression_regression.csv` file in the submission, as it is very large and already available for download.
+
 
 ### Written report guidelines
 In essence, the goal of the report is to be a *concise* summary of your work, it should show your understanding of the model, results and reasoning behind your decisions. No need to include code, any equations or algorithms used should be mentioned if we saw them in class or explained otherwise.
@@ -227,7 +243,7 @@ In essence, the goal of the report is to be a *concise* summary of your work, it
 - **Length**: Maximum **3 pages** (excluding charts and figures, equations count towards length).
 - **Font**: Readable (e.g., Arial) with a minimum size of 11pt and standard margins.
 - **Explanations**: Provide clear, short explanations for your model choices, esp. if they diverge from what we've seen in class. Include any challenges you faced and how you solved them.
-- **Charts**: Include relevant charts and figures to illustrate your results. Make sure they are clear and labeled, and provide a brief explanation of how it relates to your results.
+- **Charts**: Include relevant figures, make sure they are clear and labeled, and provide a brief explanation of how it relates to your results.
 
 {{< pagebreak >}}
 
@@ -242,7 +258,6 @@ In essence, the goal of the report is to be a *concise* summary of your work, it
 | Results reproducibility                                                      | 5   |
 
 
-
 ## Academic integrity & help
 * Do not use any external libraries for the model implementation, except `numpy` and `pandas`.
 * Do not use `sklearn` for the model implementation, only for data splitting.
@@ -250,6 +265,8 @@ In essence, the goal of the report is to be a *concise* summary of your work, it
 * Post questions in the **HW1 Moodle forum**. For Private issues email the TA.
 
 Good luck!
+
+{{< pagebreak >}}
 
 ## FAQ
 
@@ -263,10 +280,13 @@ Q: Do I need a GPU to run this assignment?
 A: No, you can run this assignment on a CPU. The dataset is small enough to fit in memory and the model training will not take long.
 
 Q: What language should I use for the report and code?
-A: Any language is fine! (English is preferred, but not required.)
+A: For the report - Hebrew or English (English is recommended since you will use many technical terms anyway). Any language is fine for the code!
 
 Q: What should I do if my results are different each run?
 A: Make sure to set all random seeds (e.g., random_state=42 in train_test_split and for any random number generators you use) for reproducibility.
 
-Q: What Loss funtcion should I use?
-A: You can you any loss function that is suitable, but the most common one for regression tasks is Mean Squared Error (MSE). 
+Q: What Loss function should I use?
+A: You can you any loss function that is suitable, but the most common one for regression tasks is Mean Squared Error (MSE).
+
+Q: What does code reproducibility mean?
+A: Code reproducibility means that anyone who runs your code and provides the data should be able to obtain the same results as you did. This includes using the same random seeds, data splits, and ensuring that all necessary files are included in the submission.
