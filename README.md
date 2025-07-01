@@ -14,6 +14,8 @@ Welcome to the course repository for **Medical Diagnostics**, an intensive 4-wee
 | 3    | CNNs & Image Classification   | Features in biological images|
 | 4    | RNNs & Nanopore Sequencing    | Sequences & base-calling     |
 
+*Week 4 was not included this semester.
+
 ---
 
 ## 📌 Guidelines
@@ -25,7 +27,7 @@ Welcome to the course repository for **Medical Diagnostics**, an intensive 4-wee
   1. `src/` directory with all code, including a `main.py` file that can reproduce your results. No need to submit data or trained models.
   2. `report_ID1_ID2.pdf` – your written concise report, according to each HW requirments
 
-* **Assignments**: There will be two homework assignments (Regression and Neural Networks) and one final project.
+* **Assignments**: There are two planned homework assignments (Regression and Neural Networks) and one final project.
 
 * **Grading**: Based on both code correctness and clarity, and the quality of the written report.
 

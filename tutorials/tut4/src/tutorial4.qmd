@@ -26,25 +26,120 @@ revealjs-plugins:
 ::: {.center}
 # 1 Intro
 :::
-## 1.1 משאל המרצה והמתרגל
-Open now!
 
-![](assets/questionair.png){fig-align="center" width=40%}
+## 1.1 משאל המרצה והמתרגל
+- Open until 2025-07-13
+- Only 7% of the class has filled it
+
+![](assets/questionair.png){fig-align="center" width=30%}
+
+## 1.2 HW1 submission status
+- 1 week left to submit HW1
+- 10% of the final grade
+- Only 10% of the class has submitted HW1
+
+![](assets/meme1.png){fig-align="center" width=70%}
+
 	
 
 ::: {.center}
 # 2 Course recap {data-name="Recap"}
 :::
 
-## 1.1 What is Machine Learning?
+## 2.1 Definitions and Differences
 
-## 1.2 What is Deep Learning?
+::: columns
 
-## 1.3 Linear Regression
+::: {.column width="50%"}
 
-## 1.4 Gradient Descent
+<div style="position: relative; width: 300px; height: 300px; margin: auto; font-family: sans-serif; font-weight: bold;">
 
-## 1.5 Multi-Layer Perceptron
+<div style="position: absolute; width: 300px; height: 300px; border-radius: 50%; background: #fcdc3c; display: flex; align-items: center; justify-content: center; z-index: 1;">
+  <span style="font-size: 20px;">AI</span>
+
+<div style="width: 200px; height: 200px; border-radius: 50%; background: #6a0dad; display: flex; align-items: center; justify-content: center; z-index: 2;">
+  <span style="font-size: 18px;">ML</span>
+
+<div style="width: 100px; height: 100px; border-radius: 50%; background: white; border: 3px solid #6a0dad; display: flex; align-items: center; justify-content: center; z-index: 3;">
+  <span style="font-size: 16px;">DL</span>
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+:::
+
+::: {.column width="50%"}
+
+<div style="font-size: 0.9em; line-height: 1.5;">
+  <p><strong>Artificial Intelligence (AI)</strong><br>Software that can imitate human intellect and behavior.</p>
+  <p><strong>Machine Learning (ML)</strong><br>Algorithms that enable AI implementation through data.</p>
+  <p><strong>Deep Learning (DL)</strong><br>Subset of machine learning which follows neural networking.</p>
+</div>
+
+:::
+
+:::
+
+## 2.2 Linear Regression
+- Classic supervised learning algorithm
+- Simple Hypothesis class 
+$$
+\mathcal{H}_{\text{LR}} = \left\{ h(x) = w^\top x + b \mid w \in \mathbb{R}^d,\ b \in \mathbb{R} \right\}
+$$
+
+## 2.3 Gradient Descent
+- **Gradient Descent**: Optimization algorithm used in ML & DL to minimize loss function by iteratively updating model parameters.
+- Not a model itself, but the method used to train ML/DL models
+
+## 2.4 Multi-Layer Perceptron
+- Network with multiple layers that learns non-linear relationships
+- Can approximate any continuous function (Universal Approximation Theorem)
+- Complex hypothesis: 
+$$
+\mathcal{H}_{\text{MLP}} = \left\{ h(x) =  W_2 \cdot a(W_1 x + b_1) + b_2 \mid W_1, W_2, b_1, b_2 \right\}
+$$
+- Assume 1 hidden layer with ReLU activation function
+- **ReLU**: Rectified Linear Unit, defined as $a(x) = \max(0, x)$
+
+## 2.5 Convolutional Neural Networks (CNNs)
+- Specialized for image data
+- Uses convolutional layers to extract spatial features
+- Convolutional layer applies filters to input data, capturing local patterns
+- Even more complex hypothesis class:
+$$
+\mathcal{H}_{\text{CNN}} = \left\{ h(x) = w^\top \operatorname{Flatten}(a(\text{Conv}(x; \theta))) + b \right\}
+$$
+
+
+## 2.5 When to Use Deep Learning? {.smaller}
+
+::: columns
+
+::: {.column width="50%"}
+### Keep It Simple
+- When several methods perform similarly, prefer the **simplest**
+- Deep learning is **powerful**, but:
+  - More complex to train  
+  - Harder to interpret  
+- Try simpler models first:
+  - Easier to explain  
+  - Often competitive  
+  - Less fragile
+:::
+
+::: {.column width="50%"}
+### Use Deep Learning When:
+- **Training set is large**
+- **Model interpretability is not critical**
+- Dataset supports complex, nonlinear models  
+- Simpler models underperform after tuning  
+:::
+
+:::
 
 ::: {.center}
 # 3 Beyond the curriculum {data-name="Next Chapters"}
@@ -78,12 +173,42 @@ Open now!
 
 
 ::: {.center}
-# 6 Conclusion
+# 6 Conclusion {data-name="Conclusion"}
 :::
 
-## Conclouding Remarks
+## 6.1 Conclouding Remarks 
 
-## 6.2 משאל המרצה והמתרגל
-Open now!
+## 6.2 Reflections {.smaller}
+- We have (tried to cover) covered a lot of material: walking on the thin line between interesting, difficult, and useful
+- Some unplanned events, but hope you enjoyed the course
+- Staring into the abyss might not be that bad after all?
+- Thank you for your patience and for being a great class!
+
+<div class="center">
+![](assets/meme.jpg){fig-align="center" width=30%}
+</div>
+
+::: {.notes}
+- Being a student is hard
+- Things that were not shown, but are important:
+  - Data preprocessing
+  - Hyperparameter tuning
+  - Model implementation
+  - Model deployment
+- This doesn't end here, feel free to reach out with questions
+- So much more information out there, keep learning!
+- Being a TA is extremley rewarding, thank you for your patience and for being a great class!
+:::
+
+## 6.3 משאל המרצה והמתרגל
+- Open now!
+- Cheesfork review: Great → students know what's coming
+  + (maybe don't go too hard! 😅)
 
 ![](assets/questionair.png){fig-align="center" width=40%}
+
+
+::: {.center}
+# 6 Good luck!
+hoory@campus.technion.ac.il
+:::
