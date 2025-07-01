@@ -10,7 +10,7 @@ format:
   jasa-html: default
 semester: Spring 2025
 submission-date: 24.6.25
-update-date: 12.6.25
+update-date: 1.7.25
 author:
   - name: Mattan Hoory
     acknowledgements: | 
@@ -92,11 +92,11 @@ $$Y\in \mathbb{R}^{n}$$ (Last column is the target gene)
 
 Implement this part yourself (a full 'training-loop' like what we have seen in the tutorials), do **not** use imported optimisers. In the tutorials we have seen an example for a single-variable linear regression, here you will implement a **multiple linear regression** model, which is a generalization of the single-variable case.
 
-*3.1.1* What are the inputs and outputs of the model?
+*3.1.1* What are the inputs and outputs of the model ($h_\theta$)?
 
-*3.1.1.1* What parameters of the model are learned during training?
+*3.1.1.1* What parameters are learned during training?
 
-*3.1.1.2* What parameters of the model are fixed during training?
+*3.1.1.2* What parameters are fixed during training?
 
 *3.1.1.3* What is the weight vector (denoted $w$), what is its shape/size?
 
