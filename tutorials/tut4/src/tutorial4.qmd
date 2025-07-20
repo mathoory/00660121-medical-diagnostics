@@ -1,6 +1,6 @@
 ---
 title: "Medical Diagnostics"
-subtitle: "Tutorial 4: Final Project<br><br>Spring 2025<br><br> Faculty of Biotechnology and Food Engineering<br> Technion Israel Institute of Technology <br><br> TA: Mattan Hoory"
+subtitle: "Tutorial 8: Final Project<br><br>Spring 2025<br><br> Faculty of Biotechnology and Food Engineering<br> Technion Israel Institute of Technology <br><br> TA: Mattan Hoory"
 format:
   revealjs: 
     code-overflow: scroll
@@ -36,11 +36,10 @@ revealjs-plugins:
 ## 1.2 HW1 submission status
 - 1 week left to submit HW1
 - 10% of the final grade
-- Only 10% of the class has submitted HW1
+- Only **15%** of the class has submitted HW1
 
 ![](assets/meme1.png){fig-align="center" width=70%}
 
-	
 
 ::: {.center}
 # 2 Course recap {data-name="Recap"}
@@ -105,7 +104,14 @@ $$
 - Assume 1 hidden layer with ReLU activation function
 - **ReLU**: Rectified Linear Unit, defined as $a(x) = \max(0, x)$
 
-## 2.5 Convolutional Neural Networks (CNNs)
+## 2.5 Backpropagation
+- **Backpropagation**: Algorithm for computing gradients in neural networks
+- Efficiently computes gradients of loss with respect to model parameters
+
+![](assets/backprop_diagram.png){fig-align="center" width=30%}
+
+
+## 2.6 Convolutional Neural Networks (CNNs)
 - Specialized for image data
 - Uses convolutional layers to extract spatial features
 - Convolutional layer applies filters to input data, capturing local patterns
@@ -115,7 +121,7 @@ $$
 $$
 
 
-## 2.5 When to Use Deep Learning? {.smaller}
+## 2.7 When to Use Deep Learning? {.smaller}
 
 ::: columns
 
@@ -146,39 +152,32 @@ $$
 :::
 
 ## 3.1 Residual Neural Networks (Resnets)
+![](assets/conv.png){fig-align="center"}
+
 
 ## 3.2 Recurrent Neural Networks (RNNs)
+![](assets/rnn.png){fig-align="center"}
 
-## 3.3 Generative Adversarial Networks (GANs)
+## 3.4 Hand-waving on NLP 1
+![](assets/NLP.png){fig-align="center"}
 
-## 3.4 Diffusion Models
-
-## 3.5 Transformers
-
-
-::: {.center}
-# 4 Exercise {data-name="Exercise"}
-:::
-
-## 4.1 Exercise Overview
+## 3.4 Hand-waving on NLP 1
+![](assets/timeline.png){fig-align="center"}
 
 
 ::: {.center}
-# 5 Final project {data-name="Final Project"}
+# 4 Conclusion {data-name="Conclusion"}
 :::
 
-## 5.1 Project Overview
-## 5.2 Project Requirements
-## 5.3 Project Submission
+## 4.1 Concoulding Remarks
+- Things that were not shown, but are important:
+  - Data preprocessing
+  - Hyperparameter tuning
+  - Model implementation
+  - Model deployment
+- Choosing the right model is only a small part
 
-
-::: {.center}
-# 6 Conclusion {data-name="Conclusion"}
-:::
-
-## 6.1 Conclouding Remarks 
-
-## 6.2 Reflections {.smaller}
+## 4.1 Reflections
 - We have (tried to cover) covered a lot of material: walking on the thin line between interesting, difficult, and useful
 - Some unplanned events, but hope you enjoyed the course
 - Staring into the abyss might not be that bad after all?
@@ -189,26 +188,64 @@ $$
 </div>
 
 ::: {.notes}
-- Being a student is hard
-- Things that were not shown, but are important:
-  - Data preprocessing
-  - Hyperparameter tuning
-  - Model implementation
-  - Model deployment
 - This doesn't end here, feel free to reach out with questions
 - So much more information out there, keep learning!
-- Being a TA is extremley rewarding, thank you for your patience and for being a great class!
 :::
 
-## 6.3 משאל המרצה והמתרגל
+## 4.3 משאל המרצה והמתרגל
 - Open now!
-- Cheesfork review: Great → students know what's coming
-  + (maybe don't go too hard! 😅)
+- Cheesfork review: Great → *students* know what's coming
 
 ![](assets/questionair.png){fig-align="center" width=40%}
+
+## Final-Project Roadmap {.smaller}
+
+::: incremental
+* **Step 1 – DIY MLP**  
+  Build a *3-layer MLP* **from scratch** (forward + back-prop):  
+  input → hidden → hidden → output.  
+  Train on the same mini-GEO matrix → **compare vs. HW 1**.
+
+* **Step 2 – PyTorch MLP**  
+  Re-implement the network with `torch.nn` & `optim`.  
+  Observe: identical math, ~10× less boiler-plate.
+
+* **Step 3 – CNN for RBP binding**  
+  - *Dataset*: 101-nt RNA windows[1]
+  - *Label*: does **one fixed RBP** bind? (binary).  
+  - *Input encoding*: one-hot `'AUGC'` → 4×L tensor.  
+  - *Model*: convolutions (as in the paper) → global-max-pool → FC → sigmoid.  
+  - Evaluate **Accuracy, AUROC, PR-AUC**; discuss learned motifs.
+:::
+
+::: {.fragment}
+<div style="font-size: 0.8em;">
+Pan, X., & Shen, H. B. (2018). Predicting RNA-protein binding sites and motifs through combining local and global deep convolutional neural networks. Bioinformatics (Oxford, England), 34(20), 3427–3436. https://doi.org/10.1093/bioinformatics/bty364
+</div>
+:::
+
 
 
 ::: {.center}
 # 6 Good luck!
 hoory@campus.technion.ac.il
+:::
+
+
+::: {.center}
+# 7 Backpropagation Workshop {data-name="Workshop"}
+:::
+
+## Back-prop exercise
+
+::: incremental
+- **Your mission** – complete the `# TODO` spots   
+
+- *Forward pass* builds a dynamic graph of tensors → loss.  
+- *Backward pass* walks that graph, storing ∂ loss / ∂ θ for every model parameter θ.  
+- SGD then applies the rule  
+
+- **Quick sanity-checks**  
+  * training loss should drop smoothly (print every 50 epochs)  
+  * final test MSE small on the toy example  
 :::
