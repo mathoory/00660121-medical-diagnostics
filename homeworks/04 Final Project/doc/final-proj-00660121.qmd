@@ -1,0 +1,267 @@
+---
+title: "00660121 - Medical Diagnostics Tutorial 4: deep-learning models for predicting gene expression and RNA-protein binding sites"
+
+format:
+  jasa-pdf:
+    toc: true
+    keep-tex: true  
+    journal:
+      blinded: false
+  jasa-html: default
+semester: Spring 2025
+submission-date: 7.9.25
+update-date: 20.7.25
+author:
+  - name: Mattan Hoory
+    acknowledgements: | 
+      Thanks to Prof. Roee Amit and the Technion Faculty of Biotechnology & Food Engineering for their support, and to the CS 236605 Deep Learning course staff, the authors of the original assignments, for inspiration and selected materials.
+    affiliations:
+      - name: Technion - Israel Institute of Technology
+        department: Faculty of Biotechnology and Food Engineering
+---
+
+## Aim of the assignment
+
+Multilayer Perceptrons (MLPs) and Convolutional Neural Networks (CNNs) are two landmark deep learning architectures. The goal of this assignment is to (1) understand how they work in practice, (2) apply them to problems in computational biology, and (3) learn about modern methodologies for implementing and training them.
+
+We’ll implement the core pieces of an MLP (linear layers, ReLU, loss, backprop) by hand ([Task @sec-task1]) so you see what training really does. Then we’ll rebuild the same idea in PyTorch (a python library), letting it take over the math and use it to revisit the HW1 gene‑expression regression task ([Task @sec-task2]). Finally, we’ll step into sequence modeling: a CNN that predicts RNA‑binding protein (RBP) sites from sequence and explores learned motifs ([Task @sec-task3]).
+
+In each task, we have provided you with a "skeleton" (Jupyter notebook). This code will act as a guide and should help start and focus on the main concepts instead of the code itself. Some parts are implemented and can be used as is, while others are left for you to complete.
+
+{{< pagebreak >}}
+
+### Guidelines
+
+**Work in pairs.** One submission per pair.
+**Late submission:** 10% penalty per day.
+**Submission:** .ZIP file through Moodle, see @sec-submission.
+
+- *Steps* are marked *A., B., ...*. You should complete them in the provided Jupyter notebooks. Either by filling in the TODOs or by writing your own code. The completed notebooks should be included in your submission. You will not be evaluated on the code itself, but on the results you obtain and the report you write.
+  - The code for the tasks is provided in the `src/` folder, in the form of Jupyter notebooks that contain specific instructions. You can edit and run them in VSCode, Jupyter Notebook, Google Colab, or Kaggle as described in HW0.
+- *Questions/Plots* are marked numerically *3.1.1, 3.1.2, ...*. These require you to answer the questions or use code to create the plots, and then include them in your report.
+
+
+{{< pagebreak >}}
+
+## Tasks
+
+### Task 1 - Basic MLP {#sec-task1}
+In this task, you will implement a basic version of an MLP from scratch.
+
+*A.* Complete all `# TODO‑n` cells in `task-1.ipynb`. After each TODO, if it exists, run the test cell that checks your code and make sure the check passes.
+
+#### Theoretical questions
+Answer concisely (1-2 lines) in your PDF report:
+
+*2.1.1.1.* What is the purpose of the ReLU activation function?
+
+*2.1.1.2.* Is backpropagation **required** for training a neural network? Why or why not?
+
+*2.1.1.3.* What are the main components of the train loop? What is the purpose of each component? Does the order of these components matter? Why or why not?
+
+*2.1.1.4.* Explain the difference between gradient descent and back-propagation.
+
+*2.1.1.5.* How many parameters does your MLP have? (PyTorch version), how did you calculate/find it?
+
+{{< pagebreak >}}
+
+### Task 2 - Comparison of LR and MLP on the gene expression dataset {#sec-task2}
+In this task you will revisit the **mini-GEO gene-expression dataset** you used in HW1 and benchmark an MLP (Task 1) against an LR baseline (HW1). Refer to HW1 for the dataset description. Use the exact same CSV you used in HW1 (gene_expression_regression.csv). If you no longer have it locally, re‑download it from HW1.
+
+*A.* Read *2.3 D-GEX* from *[Chen et al., 2016](https://doi.org/10.1093/bioinformatics/btw074)* to understand how deep learning was used to infer gene expression from landmark genes. Remember, we are working with a mini version of the dataset, so the results and methods might differ.
+
+*B.* Linear-Regression baseline: Train a LR model to predict the target gene expression from the landmark genes. Calculate MSE and Pearson *r* on the test set (You may copy/paste your HW1 LR code or use `sklearn.linear_model.LinearRegression`) (TODO-1)
+
+*C.* Design and implement your MLP: Start from the baseline given in `task-2.ipynb` and work according to the `TODOs`. Now, each one might require a few lines to complete. Consider which [activation function](https://pytorch.org/docs/stable/nn.html#non-linear-activations) you would like to use, how many layers and neurons per layer, and whether you want to use [dropout](https://pytorch.org/docs/stable/nn.html#dropout).
+
+*D.* Train MLP: Implement the training loop (see `task-1.ipynb` for reference). (TODO2-5)
+
+*E.* Hyper-parameters: Train the MLP model with different **depth, width, learning-rate**. Use the **validation** set for selection. You may automate this or do a handful of manual runs (6-10).
+
+*2.2.1* For the multilayer perceptron (MLP), plot the training & validation set loss curves for different hyper-parameters. How did changing each hyper-parameter affect the curves? Report the best performing MLP hyper-parameters and the final model structure.
+
+*F.* Final evaluation & comparison: Retrain the chosen MLP on train + validation sets with the best hyper-parameters found, then evaluate LR and MLP on the **test set** and compare MSE and Pearson *r*.
+
+*2.2.2* Discuss and compare the results of the LR model and the MLP model (mention MSE, Pearson *r*, and number of parameters).
+
+{{< pagebreak >}}
+
+### Task 3 - CNN for RNA-protein binding sites {#sec-task3}
+
+#### Introduction
+
+RNA‑binding proteins ([**RBPs**](https://en.wikipedia.org/wiki/RNA-binding_protein)) regulate RNA after transcription. Cross-linking and immunoprecipitation followed by high-throughput sequencing ([**CLIP-Seq**](https://en.wikipedia.org/wiki/Cross-linking_immunoprecipitation)) captures short RNA fragments crosslinked to a specific RBP (here: AGO2). To try and pinpoint sequence patterns (motifs) that drive RBP recognition, we attempt to use computational analysis. Deep convolutional neural networks (CNNs) have proven especially powerful for this task: their filters can capture sequence motifs and higher-order dependencies.
+
+In the following exercises you will:
+
+- Preprocess the data: convert raw CLIP-Seq reads into one-hot encoded sequences suitable for CNN input.
+- Build and train a CNN model in PyTorch to predict the binding probability of a given sequence to the AGO2 protein. $$f(\text{sequence})=P(\text{binding}|\text{sequence})$$
+- Tune hyper-parameters and benchmark performance
+- Visualize binding motifs
+
+##### Dataset & background  
+You can download the dataset files from [here](https://www.kaggle.com/datasets/cdncdn/clipseq-ago2)
+
+| File | Purpose |
+| -- | -- |
+| `train.positives.fa` | Training positives |
+| `train.negatives.fa` | Training negatives |
+| `ls.positives.fa` |  Test positives |
+| `ls.negatives.fa` |  Test negatives |
+
+**References:**  
+Pan, Xiaoyong, and Hong-Bin Shen. “Predicting RNA-protein binding sites and motifs through combining local and global deep convolutional neural networks.” Bioinformatics (Oxford, England) vol. 34,20 (2018): 3427-3436. [https://doi.org/10.1093/bioinformatics/bty364](https://doi.org/10.1093/bioinformatics/bty364)
+
+##### Using a GPU in this task
+Convolutional layers perform millions of matrix-multiply operations. GPUs execute these in parallel and finish **\~10-30 × faster** than a laptop CPU. Without a GPU, one training epoch can take an hour instead of a few minutes. You can access a free GPU on Google Colab or Kaggle Kernels. Both platforms provide a limited amount of GPU time per week, which is sufficient for this assignment (See HW0 for details). **Make sure you plan your runs to avoid exceeding the quota**: start with small datasets/single epochs without a GPU, then gradually increase the size and number of epochs and move to the GPU as you debug your code.
+
+
+#### Instructions
+
+*A.* Read the Introduction, and Materials and methods chapters (up until and including 2.4) from the publication to understand the context of the task at hand. In our case, we will only implement the global CNN described in section 2.2 as it suffices for our purposes.
+
+*2.3.2.0.* Explain the role of the AGO2 protein
+
+*2.3.2.1.* Report number of positive and negative sequences in the train and validation sets. (No test set in this task, only train and validation)
+
+*B.* Implement the CNN model in `task-3.ipynb` (TODO-1) and the validation loop (TODO-2).
+
+*C.* Train the model using different architectures and any hyper-parameters you find relevant. Remember, you are limited to the GPU time quota.
+
+*2.3.2.2.* Plot the learning curves of the train set (loss vs epochs), and theorize how your architecture affected the learning process.
+
+*D. * Model evaluation: In HW1 we have seen how TPR and FPR can be used to measure the performance of a binary classifier. In this task, we will use the **ROC curve** and **AUC** to evaluate our model. Here, we train a model that outputs a score (higher = more likely bound). To turn scores into 0/1 calls we pick a threshold. Different users may want high sensitivity or high specificity and may choose different thresholds accordingly.
+
+The **[Receiver Operating Characteristic (ROC) curve](https://developers.google.com/machine-learning/crash-course/classification/roc-and-auc)** shows how **sensitivity** (True Positive Rate, TPR) trades off against **1–specificity** (False Positive Rate, FPR) as you vary the decision threshold from 1.0 down to 0.0. 
+
+Reminder: Each **threshold** classifies examples based on their score.
+
+$$\tilde y_{i,\text{binary}} = \begin{cases}
+  1 & \text{if } \text{score} \ge \text{threshold}\\[2pt]
+  0 & \text{otherwise}.
+  \end{cases}
+$$ 
+
+Because this threshold can be varied, we are interested in how the model performs across all thresholds, not just the one that maximizes accuracy. For each threshold, we can compute:
+
+* $\text{TPR} = \text{TP} / (\text{TP} + \text{FN})$  "of all real positives, how many did we catch?”
+* $\text{FPR} = \text{FP} / (\text{FP} + \text{TN})$  "of all real negatives, how many did we wrongly call positive?”
+
+The **Area Under the ROC Curve (AUC‑ROC)** is the area under the graph of TPR vs. FPR; and it is a single number that summarizes the model's performance.
+
+To calculate the AUC-ROC and plot the ROC curve, you can use the [`roc_curve`](https://scikit-learn.org/stable/modules/generated/sklearn.metrics.roc_curve.html) and [`roc_auc_score`](https://scikit-learn.org/stable/modules/generated/sklearn.metrics.roc_auc_score.html) functions from the **scikit-learn** library.
+
+*2.3.2.3.* Final test metrics: report the best model's accuracy, plot the ROC curve and report the AUC on the test set.
+
+*2.3.2.4.* Report the model's architecture: a short layer-by-layer description (shapes and total trainable parameters).
+
+#### Interpretation: Motif Prediction
+
+In this part we want to discover sequence motifs: short, recurring nucleotide patterns that are statistically enriched in binding sites and thought to capture the base‑level preferences of an RBP. A motif can be represented as a Position Weight Matrix (PWM): for each position in the motif (say length 10), we sum how often A, C, G, or U occurs across many aligned instances and convert those counts to probabilities; tall columns in a logo mean strong base preference, flat columns mean weak ones. 
+
+$$
+\underbrace{
+\begin{array}{c|cccc}
+     & 1 & 2 & 3 & 4 \\\hline
+\text{read 1}  & A & C & G & U \\
+\text{read 2}  & A & U & G & U \\
+\text{read 3}  & A & C & U & U \\
+\end{array}
+}_{\text{Raw Sequences}}
+\;\Longrightarrow\;
+\underbrace{
+\begin{array}{c|cccc}
+      & A      & C      & G      & U      \\\hline
+1     & 1      & 0      & 0      & 0      \\
+2     & 0      & \tfrac{2}{3} & 0      & \tfrac{1}{3} \\
+3     & 0      & 0      & \tfrac{2}{3} & \tfrac{1}{3} \\
+4     & 0      & 0      & 0      & 1      \\
+\end{array}
+}_{\text{PWM}}
+\;\Longrightarrow\;
+\underbrace{
+\mbox{\raisebox{-0.5\height}{\includegraphics[height=3em]{assets/filepwd3na.png}}}
+}_{\text{Sequence logo (motif)}}
+$$
+
+In full research pipelines, investigators usually locate motifs by opening up a trained convolutional neural network, inspecting its first‑layer filters (which act like motif detectors), scanning real biological sequences of variable length, collecting the highest activation windows per filter, and then building separate PWMs for each learned pattern before comparing them with motif from the literature (e.g., Ray2013) using tools like TOMTOM. That approach is powerful but technically heavy. For teaching we'll take a shortcut: we already have a trained RBP classifier (for AGO2). We will conduct an "experiment" to inspect what was learned by the model. We will generate many random fixed‑length synthetic RNA sequences, ask the model to score them, and then inspect the central bases of highly scoring sequences. We will then build a single PWM for each group and construct a sequence logo for each one.
+
+E. Complete the motif extraction pipeline in `task-3.ipynb` (TODO-3), and generate a sequence logo for the positive sequences (binding). You may use [https://weblogo.berkeley.edu/logo.cgi](https://weblogo.berkeley.edu/logo.cgi) to generate the sequence logo.
+
+*2.3.2.5.* Brief discussion ( < 100 words): interpret the model's results based on your findings.
+
+#### Theoretical questions
+
+*2.3.4.1.* What is the purpose of the convolutional layers in a CNN? How do they differ from fully connected layers?
+
+*2.3.4.2.* Can the fully connected layers in the model be of any size? Why or why not? What is the effect of the size of the fully connected layer on the model's performance?
+
+{{< pagebreak >}}
+
+## Submission Guidelines {#sec-submission}
+Submit a single ZIP file with the following structure:
+
+```
+final_project_ID1_ID2.zip
+├── src/                 # your code files
+│   ├── task-1.ipynb     # Task 1: Barebone MLP
+│   ├── task-2.ipynb     # Task 2: Compare LR and MLP
+│   ├── task-3.ipynb     # Task 3: CNN for RNA-protein binding sites
+│   ├── any other code files for reproducibility...
+└── report_ID1_ID2.pdf   # < 4 pages + charts 
+```
+
+**Do not include** any data files in the submission, as they are very large and already available for download.
+
+### Written report guidelines
+The report should be a **concise** summary of your work, it should show your understanding of the model, results and reasoning behind your decisions. No need to include code, any equations or algorithms used should be mentioned if we saw them in class or explained otherwise.
+
+- **Content**: 
+  - Include your names and IDs on the first page
+  - Include answers and results of all parts in the report.
+  - Include all plots and figures that help explain your results.
+  - Use clear markers for each task and question.
+- **Length**: Maximum **4** pages (excluding charts and figures, equations count towards length).
+- **Font**: Readable (e.g., Arial) with a minimum size of 11pt and standard margins.
+- **Explanations**: Provide clear, short explanations for your model choices, esp. if they diverge from what we've seen in class. Include any challenges you faced and how you solved them.
+- **Charts**: Include relevant figures, make sure they are clear and labeled, and provide a brief explanation of how it relates to your results.
+
+### Grading rubric
+
+| Component                                                                    | Pts |
+|:-----------------------------------------------------------------------------|:----|
+| Written Report                                                               | 30  |
+| Full implementation of the models                                            | 30  |
+| Theoretical Questions                                                        | 20  |
+| Model performance (competitive factor)                                       | 15  |
+| Results reproducibility                                                      | 5   |
+
+
+### Academic integrity & help
+* Use any online docs or LLMs, **do not share code or prompts** across pairs.
+* Post questions in the **Final project Moodle forum**. Emails regarding the project **will not be answered**. For Private issues email the TA.
+
+Good luck!
+
+### FAQ
+
+Q: Can I use Kaggle/Collab?
+A: You may use any platform for development, but your final submission should follow the required folder structure and include files as specified.
+
+Q: What libraries can I use?
+A: For @sec-task1, you are allowed to use NumPy alone. For the other sections, you may use any library, but you cannot use any pre-built models. 
+
+Q: Do I need a GPU to run this assignment?
+A: Using a GPU will **significantly** speed up training times, especially for @sec-task3. You should use the free GPUs available on platforms like Google Colab or Kaggle.
+
+Q: What language may I use for the report and code?
+A: Report: English recommended, Hebrew accepted. Code: any language, but Python is recommended for compatibility with the provided code.
+
+Q: What should I do if my results are different each run?
+A: Make sure to set all random seeds (e.g., random_state=42 in train_test_split and for any random number generators you use) for reproducibility.
+
+Q: What Loss function should I use?
+A: You can you any loss function that is suitable. If we have not seen it in class, please explain it in your report.
+
+Q: What does code reproducibility mean?
+A: Code reproducibility means that anyone who runs your code and provides the data should be able to obtain the same results as you did.

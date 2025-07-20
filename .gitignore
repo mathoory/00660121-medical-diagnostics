@@ -5,3 +5,6 @@
 *.html
 *_files/
 data/
+__pycache__/
+*.fa
+*.txt
