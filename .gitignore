@@ -1,6 +1,7 @@
 *.tex
 *.bst
 *.csv
+*.pdf
 *.html
 *_files/
 data/
