@@ -10,7 +10,7 @@ format:
   jasa-html: default
 semester: Spring 2025
 submission-date: 7.9.25
-update-date: 20.7.25
+update-date: 14.8.25
 author:
   - name: Mattan Hoory
     acknowledgements: | 
@@ -24,9 +24,9 @@ author:
 
 Multilayer Perceptrons (MLPs) and Convolutional Neural Networks (CNNs) are two landmark deep learning architectures. The goal of this assignment is to (1) understand how they work in practice, (2) apply them to problems in computational biology, and (3) learn about modern methodologies for implementing and training them.
 
-We’ll implement the core pieces of an MLP (linear layers, ReLU, loss, backprop) by hand ([Task @sec-task1]) so you see what training really does. Then we’ll rebuild the same idea in PyTorch (a python library), letting it take over the math and use it to revisit the HW1 gene‑expression regression task ([Task @sec-task2]). Finally, we’ll step into sequence modeling: a CNN that predicts RNA‑binding protein (RBP) sites from sequence and explores learned motifs ([Task @sec-task3]).
+We’ll implement the core pieces of an MLP (linear layers, ReLU, loss, backpropagation) ourselves ([Task @sec-task1]). Then we’ll rebuild the same idea in PyTorch (a python library), letting it take over the math and use it to revisit the HW1 gene‑expression regression task ([Task @sec-task2]). Finally, we’ll step into sequence modeling: a CNN that predicts RNA‑binding protein (RBP) sites from sequence and explores learned motifs ([Task @sec-task3]).
 
-In each task, we have provided you with a "skeleton" (Jupyter notebook). This code will act as a guide and should help start and focus on the main concepts instead of the code itself. Some parts are implemented and can be used as is, while others are left for you to complete.
+In each task, we have provided you with a "skeleton" (Jupyter notebook). This code will act as a guide to help you get started and focus on the main concepts (instead of the code structure). Some parts are implemented and can be used as is, while others are left for you to complete.
 
 {{< pagebreak >}}
 
@@ -37,7 +37,7 @@ In each task, we have provided you with a "skeleton" (Jupyter notebook). This co
 **Submission:** .ZIP file through Moodle, see @sec-submission.
 
 - *Steps* are marked *A., B., ...*. You should complete them in the provided Jupyter notebooks. Either by filling in the TODOs or by writing your own code. The completed notebooks should be included in your submission. You will not be evaluated on the code itself, but on the results you obtain and the report you write.
-  - The code for the tasks is provided in the `src/` folder, in the form of Jupyter notebooks that contain specific instructions. You can edit and run them in VSCode, Jupyter Notebook, Google Colab, or Kaggle as described in HW0.
+  - The code for the tasks is provided in the `src/` folder, in the form of notebooks that contain specific instructions. You can edit and run them in VSCode, Jupyter Notebook, Google Colab, or Kaggle as described in HW0.
 - *Questions/Plots* are marked numerically *3.1.1, 3.1.2, ...*. These require you to answer the questions or use code to create the plots, and then include them in your report.
 
 
@@ -100,7 +100,7 @@ In the following exercises you will:
 - Visualize binding motifs
 
 ##### Dataset & background  
-You can download the dataset files from [here](https://www.kaggle.com/datasets/cdncdn/clipseq-ago2)
+You can download the dataset files from [here](https://technionmail.sharepoint.com/:u:/s/RoeeAmitLabSharepoint/EXA8De2rHrhIsj0oJUo3SMUB6UOa6hVH3v6jvEu7CrsH-A?e=AxFX3r) or from [kaggle](https://www.kaggle.com/datasets/cdncdn/clipseq-ago2)
 
 | File | Purpose |
 | -- | -- |
