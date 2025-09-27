@@ -1,5 +1,5 @@
 ---
-title: "00660121 - Medical Diagnostics Tutorial 4: deep-learning models for predicting gene expression and RNA-protein binding sites"
+title: "00660121 - Medical Diagnostics Final Project: deep-learning models for predicting gene expression and RNA-protein binding sites"
 
 format:
   jasa-pdf:
@@ -10,7 +10,7 @@ format:
   jasa-html: default
 semester: Spring 2025
 submission-date: 7.9.25
-update-date: 14.8.25
+update-date: 17.8.25
 author:
   - name: Mattan Hoory
     acknowledgements: | 
@@ -106,8 +106,8 @@ You can download the dataset files from [here](https://technionmail.sharepoint.c
 | -- | -- |
 | `train.positives.fa` | Training positives |
 | `train.negatives.fa` | Training negatives |
-| `ls.positives.fa` |  Test positives |
-| `ls.negatives.fa` |  Test negatives |
+| `ls.positives.fa` |  Validation positives |
+| `ls.negatives.fa` |  Validation negatives |
 
 **References:**  
 Pan, Xiaoyong, and Hong-Bin Shen. “Predicting RNA-protein binding sites and motifs through combining local and global deep convolutional neural networks.” Bioinformatics (Oxford, England) vol. 34,20 (2018): 3427-3436. [https://doi.org/10.1093/bioinformatics/bty364](https://doi.org/10.1093/bioinformatics/bty364)
@@ -151,7 +151,7 @@ The **Area Under the ROC Curve (AUC‑ROC)** is the area under the graph of TPR 
 
 To calculate the AUC-ROC and plot the ROC curve, you can use the [`roc_curve`](https://scikit-learn.org/stable/modules/generated/sklearn.metrics.roc_curve.html) and [`roc_auc_score`](https://scikit-learn.org/stable/modules/generated/sklearn.metrics.roc_auc_score.html) functions from the **scikit-learn** library.
 
-*2.3.2.3.* Final test metrics: report the best model's accuracy, plot the ROC curve and report the AUC on the test set.
+*2.3.2.3.* Final test metrics: report the best model's accuracy, plot the ROC curve and report the AUC on the validation set.
 
 *2.3.2.4.* Report the model's architecture: a short layer-by-layer description (shapes and total trainable parameters).
 
@@ -261,7 +261,7 @@ Q: What should I do if my results are different each run?
 A: Make sure to set all random seeds (e.g., random_state=42 in train_test_split and for any random number generators you use) for reproducibility.
 
 Q: What Loss function should I use?
-A: You can you any loss function that is suitable. If we have not seen it in class, please explain it in your report.
+A: You can use any loss function that is suitable. If we have not seen it in class, please explain it in your report.
 
 Q: What does code reproducibility mean?
 A: Code reproducibility means that anyone who runs your code and provides the data should be able to obtain the same results as you did.

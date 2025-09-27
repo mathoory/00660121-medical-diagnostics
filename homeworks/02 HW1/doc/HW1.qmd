@@ -163,7 +163,7 @@ Where:
 
 *C.* Write code to compute and save $Y_\text{binary}$, a vector of 0/1 labels for each sample, where $Y_\text{binary}[i] = y_{i,\text{binary}}$ for the $i$-th sample.
 
-*D.* Modify your model the predict the binary label you just created $Y_\text{binary}$ which will be used as the ground-truth instead of the original continuous $Y$.
+*D.* Modify your model to predict the binary label you just created $Y_\text{binary}$ which will be used as the ground-truth instead of the original continuous $Y$.
 
 D.1. **Modify the model for binary labels**: 
 Think what should be changed so that its predictions are 0 / 1 classes that match the labels you just defined.
@@ -286,7 +286,7 @@ Q: What should I do if my results are different each run?
 A: Make sure to set all random seeds (e.g., random_state=42 in train_test_split and for any random number generators you use) for reproducibility.
 
 Q: What Loss function should I use?
-A: You can you any loss function that is suitable, but the most common one for regression tasks is Mean Squared Error (MSE).
+A: You can use any loss function that is suitable, but the most common one for regression tasks is Mean Squared Error (MSE).
 
 Q: What does code reproducibility mean?
 A: Code reproducibility means that anyone who runs your code and provides the data should be able to obtain the same results as you did. This includes using the same random seeds, data splits, and ensuring that all necessary files are included in the submission.
