@@ -28,3 +28,17 @@ Welcome to the course repository for **Medical Diagnostics**, a 4-week module in
 * **Homework support**: All questions must be posted in the relevant Moodle forum. Forum answers are considered official clarifications—review them before submission.
 
 * **Appeals & personal issues**: May be sent directly to the TA by email.
+
+---
+
+## 🛠️ Repository Usage
+
+Students should use the main branch: click Code → Download ZIP, or `git clone` to get the latest version. 
+Fixes are pushed to main over the semester, so re-download or pull if something was updated. Solutions are not included. The dev branch is for development and is safe to ignore.
+
+``` 
+git switch main
+git checkout dev -- path/to/hw1        # only these paths cross over (already staged)
+git commit -m "Release HW1 (v2): fix Q3"
+git switch dev                          # back to work
+```
