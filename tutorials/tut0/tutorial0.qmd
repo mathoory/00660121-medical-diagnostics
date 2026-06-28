@@ -1,6 +1,6 @@
 ---
 title: "Medical Diagnostics"
-subtitle: "Tutorial 5 (0): Intro<br><br>Spring 2025<br><br> Faculty of Biotechnology and Food Engineering<br> Technion Israel Institute of Technology"
+subtitle: "Tutorial 6 (0): Intro<br><br>Spring 2026<br><br> Faculty of Biotechnology and Food Engineering<br> Technion Israel Institute of Technology"
 format:
   revealjs: 
     title-slide-attributes:
@@ -19,29 +19,29 @@ revealjs-plugins:
   - simplemenu
 ---
 ## Agenda {data-name="Intro"}
-1. About the course (Administration, Goals, etc...)
-2. ChaptGPT Do's and Don'ts
-3. Homework Assignments & Grading
-4. How to ~~survive~~ ace the course
+1. About the course & tutorial goals
+2. About you (survey) & about me
+3. Homework, project & grading
+4. Making the most of it: challenges, LLMs, getting help
 
 ## About the course 
 ::: incremental
 - Intro to Machine Learning (ML) and Deep Learning (DL)
 - 4 Weeks, Frontal
-- Pre-class videos
 - Paper-driven teaching
-- No midterm/exams: 2 HWs and a final project
+- 2 HWs and a final project (Not included in the Exam)
 :::
 
 ::: {.notes}
 - Demystify ML/DL
 - Very short, only 4 weeks, but very intensive. not enough time to make corrections.
-- The presentations are not meant to be a replacement for the tutorials. They are a teaching aid for the TA and are avilable for you on the moodle site to use if you wish.
+- The presentations are not meant to be a replacement for the tutorials. They are a teaching aid for the TA and are available for you on the moodle site to use if you wish.
 - No "question and answer" model, but rather a "open problem solving" model.
 :::
 
 
-## Tutorials Goals: YES
+
+## Tutorials Goals: [YES]{style="color:green;"}
 ::: incremental
 * **Learn:** concepts in Machine and Deep learning (ML/DL)
 * **Understand:** Data driven publications (some)
@@ -56,35 +56,28 @@ revealjs-plugins:
 concepts such as supervised learning, unsupervised learning, reinforcement learning, neural networks, and deep learning architectures.
 :::
 
-## Tutorials Goals: NO
-* **Write :** code from scratch
-* **Use:** specific tools, libraries (pytorch, pandas, scikit-learn), software or frameworks
+## Tutorials Goals: [NO]{style="color:red;"}
+* **Code:** from scratch
+* tools, libraries (pytorch, pandas, scikit-learn), software or frameworks
 
 :::{.footer}
 (I'm here to help, but they are not the main focus of the course)
 :::
 
-## About the Students
 
-<div style="text-align: center;">
-![](assets/year_degree.png)
-</div>
-
-(N=29)
-
-## Faculty 
-<div style="text-align: center;">
-![](assets/faculty.png)
-</div>
-
-## Background & Motivation
-::: {.fragment .center}
+## About the Students: Background 
 ![](assets/Backgrounds.png)
+
+
+## About the Students: Motivation
+![](assets/motivation.png)
+
+## But Mattan...
+
+::: {.r-fit-text style="text-align:center;"}
+This is biotechnology,<br>not computer Science
 :::
 
-::: {.fragment .center}
-![](assets/motivation.png)
-:::
 
 
 ## About the TA (me)  {.smaller}
@@ -93,10 +86,10 @@ concepts such as supervised learning, unsupervised learning, reinforcement learn
 
 ::: {.column width="60%"}
 - *Past life*: QA → Developer (C-linux)  
-- *Plot twist*: B.Sc. in CS (+Bioinformatics)
-  + *iGEM* 2022 member · exchange at *National Taiwan University*  
+- *Plot twist*: B.Sc. in CS (Bioinformatics Track)
+  + *iGEM* 2022 · *National Taiwan University* exchange  
 - *Now*: M.Sc. candidate in Prof. Roee Amit's lab
-- Courses I liked: Organic Chemistry, Labs (Genetics/Biomol), and of *course*, this one!
+- Courses I liked: Organic Chemistry, Labs (Genetics/Biomol), this one!
 - Passions: food, travel, history and languages!
 :::
 
@@ -107,6 +100,9 @@ concepts such as supervised learning, unsupervised learning, reinforcement learn
 
 ## Course History
 Spring 2025: first time this part of the course is taught
+
+Spring 2026: second time, first time with HW2/Project Split
+
 <div style="text-align: center;">![](assets/timeline.png){width=110%}</div>
 
 ## Course Resources {.smaller}
@@ -146,7 +142,7 @@ Submission is **in pairs**, sophisticated libraries not allowed (Ask)
 ### Grading Breakdown of each HW:
 - **Report** (80%):
   + Results (40%) / Explanation & Insight (40%)
--  **Leaderboard Performance ** (up to 20%) 🏆 
+-  **Performance** (up to 20%) 🏆 
 - **Bonus Points** (Optional)
 - **Penalties**
 
@@ -157,12 +153,21 @@ NO PLAGIARISM
 write the final solutions alone and understand them fully
 :::
 
-## Course challenges {data-name="Tips"}
-+ Programming
-+ Linear Algebra
-+ New terminology
-+ Semi-Heavy workload
-  - **2**xHws + **1**xProject
+## Course Schedule {.smaller}
+
+| Date         | Wk (ML)           | Topic                          | HW Released                            | HW Due                 |
+| ------------ | ----------------- | ------------------------------ | -------------------------------------- | ---------------------- |
+| Sun 28.06.26 | 12 (ML 1)         | Simple regression models       | **HW1** (Regression)                   | —                      |
+| Sun 05.07.26 | 13 (ML 2)         | fully-connected neural network | **HW2** (Fully-Connected)              | —                      |
+| Sun 12.07.26 | 14 (ML 3)         | CNNs                           | —                                      | **HW1**                |
+| Sun 19.07.26 | 15 (ML 4)         | Base-calling + Transformers    | **Final Project** (CNN + Transformers) | **HW2**                |
+| Wed 09.09.26 | — _(exam period)_ | —                              | —                                      | **Final Project**      |
+
+## Course Tips {data-name="Tips"}
++ Programming, Linear Algebra, New terminology - No need to understand all the underlying math to implement deep learning models.
++ Semi-Heavy workload (**2**xHws + **1**xProject) - Start early
++ Keep a notebook (digital and physical) where you translate complex definitions into your own words.
++ TMI
 
 :::{.notes}
 troubleshoot my way through new technical challenges with Google and our dear chatbots (e.g. ChatGPT and Copilot).
@@ -175,19 +180,20 @@ What helped me was keeping a notebook (digital and physical) where I translated 
 
 Use Chrome bookmarks to save blog posts that explain things in a way that clicks. The more you immerse yourself, the more familiar these terms will become. Whatever you do, don’t let the initial unfamiliarity paralyse you. There was probably a time when limited resources were a problem. Now, we have the opposite issue: too much information.
 
-HW - strat early
+HW - start early
 :::
 
-## ChatGPT (and other LLMs)
+## ChatGPT, Gemini and Claude (and other LLMs)
 - Code responsibility: you are responsible for the code you submit.
 - Tutor, not replacement 
-- Can't really think logically or analyze results well
+- Can't really really see your results
+- Required to submit conversation with LLMs (if used) as part of the HW submission
 
 
 ## How to get and ask for help
-- **Moodle forum** is the best way to get help, emails regarding HW will not be answered.
+- **Moodle forum** is the best way to get help, emails regarding HW will **not** be answered.
 - TA hours and workshops available on demand.
-  - I'm not going to read (all of) your code
+  - won't debug line-by-line, but I'll help you get unstuck
 - If I speak too fast or too slow - please let me know.
 - Ask questions during/after the tutorials
 - My email: [hoory@campus.technion.ac.il](mailto:hoory@campus.technion.ac.il)
@@ -195,7 +201,7 @@ HW - strat early
 
 ## How to survive the course
 * Independent learning, but also asking for help when needed
-* Google and ChatGPT are your friends
+* Google and Claude are your friends but also enemies
 * Working with your actual friends
 
 ::: {.incremental}
@@ -204,6 +210,5 @@ HW - strat early
 3. Run the code, and then debug it
 4. Repeat
 :::
-
-## Questions?
+## See you in the forum
 ![](assets/meme.jpg){.absolute left=0 right=0 bottom=0 top=120 height="80%" style="margin: auto auto;"}
