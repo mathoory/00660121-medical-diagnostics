@@ -9,3 +9,7 @@ __pycache__/
 *.fa
 *.txt
 *sol*
+
+# Keep Quarto extension template resources (not build artifacts)
+!**/_extensions/**/*.tex
+!**/_extensions/**/*.bst
