@@ -1,0 +1,639 @@
+---
+title: "The Math Behind the Training Loop"
+subtitle: |
+  Workshop: Linear algebra & calculus from scratch — deriving the gradient-descent update used in HW1\
+  Spring 2026 · Faculty of Biotechnology and Food Engineering\
+  Technion — Israel Institute of Technology · TA: Mattan Hoory
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    toc-title: "Contents"
+    number-sections: true
+    number-depth: 2
+    code-fold: false
+    code-tools: true
+    format-links: false
+    highlight-style: github
+    theme: cosmo
+    fig-width: 6
+    fig-height: 4
+    df-print: paged
+    html-math-method: mathjax
+    embed-resources: true
+  pdf:
+    pdf-engine: xelatex
+    toc: true
+    toc-depth: 3
+    number-sections: true
+    number-depth: 2
+    geometry: margin=1in
+    fontsize: 11pt
+    linkcolor: RoyalBlue
+    urlcolor: RoyalBlue
+    toccolor: black
+    highlight-style: github
+    fig-width: 6
+    fig-height: 4
+    code-block-bg: "#f7f7f7"
+execute:
+  echo: true
+  warning: false
+jupyter: python3
+---
+
+```{=html}
+<a href="../" class="back-to-workshops" title="Back to all workshops">&larr;&nbsp;Workshops</a>
+<style>
+.back-to-workshops{
+  position:fixed; top:1rem; left:1rem; z-index:1000;
+  display:inline-flex; align-items:center;
+  font-size:.85rem; font-weight:500; text-decoration:none; color:inherit;
+  padding:.4rem .8rem; border-radius:999px;
+  background:rgba(128,128,128,.12);
+  border:1px solid rgba(128,128,128,.28);
+  -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px);
+  transition:background .15s ease, border-color .15s ease;
+}
+.back-to-workshops:hover{ background:rgba(128,128,128,.22); border-color:rgba(128,128,128,.45); }
+@media print{ .back-to-workshops{ display:none !important; } }
+@media (max-width:1200px){
+  .back-to-workshops{ position:static; margin:0 0 1.25rem; }
+}
+</style>
+```
+
+## Why this workshop? {#sec-why .unnumbered}
+
+In Tutorial 1 we met **multiple linear regression** trained with **mini-batch
+gradient descent**, and in **HW1** you implemented the training loop yourself.
+The heart of that loop is these few lines:
+
+```python
+for epoch in range(self.n_epochs):
+    idx = rng.permutation(n)                 # shuffle each epoch
+    for start in range(0, n, self.batch_size):
+        bi = idx[start:start + self.batch_size]
+        Xb, yb = X[bi], y[bi]
+        B = Xb.shape[0]
+        resid  = self._linear(Xb) - yb       # (B,)   r = Xw + b - y
+        grad_w = (2.0 / B) * (Xb.T @ resid)  # (m,)   ∂L/∂w
+        grad_b = (2.0 / B) * resid.sum()     # scalar ∂L/∂b
+        self.w -= self.lr * grad_w           # update rule (w)
+        self.b -= self.lr * grad_b           # update rule (b)
+```
+
+Every symbol here — `Xb.T @ resid`, the `2/B`, the minus sign in the update — comes
+from two pieces of math: **linear algebra** (what `@` and `.T` mean) and
+**calculus** (where the gradient comes from). This workshop builds both **from
+scratch** and finishes by **deriving each line above**.
+
+::: {.callout-tip}
+## Goal
+By the end you will be able to look at any line of that loop and say *exactly* which
+definition or rule it implements — and verify it numerically in code.
+:::
+
+We use the notation from Tutorial 1: the model is
+$$h_\theta(x) = w^\top x + b,\qquad \theta=(w,b),$$
+and the loss is the **mean squared error (MSE)**.
+
+```{python}
+import numpy as np
+import matplotlib.pyplot as plt
+rng = np.random.default_rng(0)
+np.set_printoptions(precision=3, suppress=True)
+```
+
+# Part I — Linear algebra from scratch {#sec-linalg}
+
+## Scalars, vectors, and notation {#sec-vectors}
+
+* A **scalar** is a single number, e.g. the learning rate $\eta = 0.001$.
+* A **vector** is an ordered list of numbers. We write it as a column:
+$$
+x=\begin{bmatrix}x_1\\x_2\\\vdots\\x_m\end{bmatrix}\in\mathbb{R}^m .
+$$
+In HW1 one **sample** is a vector $x\in\mathbb{R}^{943}$ — the 943 landmark-gene
+expression values. The number of entries, $m$, is the vector's **dimension**.
+
+```{python}
+x = np.array([2.0, -1.0, 3.0])     # a vector in R^3
+print("x      =", x)
+print("shape  =", x.shape, "  dimension m =", x.shape[0])
+```
+
+### Two basic operations
+
+**Addition** (same length, entry by entry) and **scalar multiplication** (scale
+every entry):
+$$
+x+y=\begin{bmatrix}x_1+y_1\\\vdots\\x_m+y_m\end{bmatrix},\qquad
+\alpha x=\begin{bmatrix}\alpha x_1\\\vdots\\\alpha x_m\end{bmatrix}.
+$$
+
+```{python}
+y = np.array([1.0, 1.0, 1.0])
+print("x + y   =", x + y)
+print("2 * x   =", 2 * x)
+```
+
+These two operations are *exactly* what the update rule `self.w -= self.lr * grad_w`
+uses: it scales the gradient vector by $\eta$ and subtracts it from $w$.
+
+## The dot product: the engine of the linear model {#sec-dot}
+
+The **dot product** of two vectors of the same length is a single **scalar**:
+$$
+w^\top x \;=\; \sum_{j=1}^{m} w_j\,x_j \;=\; w_1x_1+w_2x_2+\dots+w_mx_m .
+$$
+
+```{python}
+w = np.array([0.5, -2.0, 1.0])
+print("w·x (loop)  =", sum(w[j]*x[j] for j in range(len(x))))
+print("w·x (numpy) =", w @ x)          # the @ operator = dot product here
+```
+
+This is the entire linear model for **one** sample:
+$$
+\boxed{\,h_\theta(x) = w^\top x + b = \Big(\sum_{j=1}^m w_j x_j\Big) + b\,}
+$$
+Each weight $w_j$ says how much gene $j$ pushes the prediction up or down; $b$ is a
+constant offset (the **bias**).
+
+::: {.callout-note collapse="true"}
+## Exercise 1 — predict one sample by hand
+With $w=[0.5,-2,1]^\top$, $b=0.1$, and $x=[2,-1,3]^\top$, compute $h_\theta(x)$.
+
+**Solution.** $w^\top x = (0.5)(2)+(-2)(-1)+(1)(3)=1+2+3=6$, so
+$h_\theta(x)=6+0.1=6.1$.
+```{python}
+print(w @ x + 0.1)
+```
+:::
+
+## Matrices and the matrix–vector product {#sec-matrix}
+
+A **matrix** stacks vectors into a grid. In HW1 a **batch** of $B$ samples is a
+matrix
+$$
+X=\begin{bmatrix}\text{— }x_1^\top\text{ —}\\\text{— }x_2^\top\text{ —}\\\vdots\\\text{— }x_B^\top\text{ —}\end{bmatrix}\in\mathbb{R}^{B\times m},
+$$
+i.e. **row $i$ is sample $i$**. The full dataset is $X\in\mathbb{R}^{n\times m}$.
+
+To predict for *all* rows at once we use the **matrix–vector product** $Xw$: row $i$
+of the result is the dot product of row $i$ of $X$ with $w$.
+$$
+(Xw)_i=\sum_{j=1}^m X_{ij}\,w_j = x_i^\top w .
+$$
+So $Xw\in\mathbb{R}^{B}$ holds the linear part of all $B$ predictions, and the whole
+batch prediction is $\hat y = Xw + b$ (the scalar $b$ is added to every entry —
+**broadcasting**).
+
+```{python}
+X = np.array([[2.0, -1.0, 3.0],
+              [0.0,  1.0, 1.0],
+              [1.0,  1.0, 0.0],
+              [-1.0, 0.0, 2.0]])   # 4 samples (rows), 3 features (cols): shape (4,3)
+b = 0.1
+preds = X @ w + b                  # shape (4,) — one prediction per sample
+print("X shape   :", X.shape)
+print("X @ w + b :", preds)
+# sanity check: row 0 must equal the by-hand answer from Exercise 1
+print("row 0 == 6.1 ?", np.isclose(preds[0], 6.1))
+```
+
+### Shapes must line up {#sec-shapes}
+
+A product $A\,v$ is only defined when the **inner dimensions match**:
+$$
+\underbrace{X}_{B\times m}\;\underbrace{w}_{m\times 1}\;\Rightarrow\;\underbrace{Xw}_{B\times 1}.
+$$
+Checking shapes is the fastest way to debug ML code. In the HW1 loop:
+
+| symbol | meaning | shape |
+|---|---|---|
+| `Xb` | batch of inputs | $B\times m$ |
+| `w` | weights | $m$ |
+| `Xb @ w` | linear scores | $B$ |
+| `resid` | residuals $\hat y-y$ | $B$ |
+| `Xb.T` | transpose of `Xb` | $m\times B$ |
+| `Xb.T @ resid` | gradient direction | $m$ |
+
+## The transpose, and where $X^\top$ comes from {#sec-transpose}
+
+The **transpose** $X^\top$ flips rows and columns: if $X$ is $B\times m$ then
+$X^\top$ is $m\times B$, with $(X^\top)_{ji}=X_{ij}$.
+
+```{python}
+print("X   shape:", X.shape)
+print("X.T shape:", X.T.shape)
+print(X.T)
+```
+
+Why does the gradient line use $X^\top$? Because we will need, for **each feature
+$j$**, the sum over all samples of (that feature's value $\times$ the residual):
+$$
+\big(X^\top r\big)_j=\sum_{i=1}^{B} X_{ij}\,r_i .
+$$
+That is precisely $m$ dot products — one per feature — packed into a single
+matrix–vector product. Keep this identity in mind; it is the whole reason `Xb.T`
+appears in `grad_w`. We'll derive it properly in @sec-derive-matrix.
+
+```{python}
+r = np.array([1.0, -1.0, 0.5, 2.0])   # a dummy residual vector, shape (4,)
+# feature-by-feature sum, the slow way:
+manual = np.array([sum(X[i, j]*r[i] for i in range(X.shape[0]))
+                   for j in range(X.shape[1])])
+print("manual   X^T r :", manual)
+print("numpy  X.T @ r :", X.T @ r)
+```
+
+# Part II — Calculus from scratch {#sec-calculus}
+
+## Functions and the derivative {#sec-derivative}
+
+A **function** $f$ turns an input into an output, e.g. $f(t)=t^2$. The
+**derivative** $f'(t)=\frac{df}{dt}$ is the **slope** of $f$ at $t$ — how fast the
+output changes when the input nudges. Formally it is a limit:
+$$
+f'(t)=\lim_{h\to 0}\frac{f(t+h)-f(t)}{h}.
+$$
+Intuition for gradient descent: the derivative points **uphill**. To *decrease*
+$f$, step in the **opposite** direction — that single fact is the minus sign in the
+update rule.
+
+```{python}
+f = lambda t: t**2
+t0, h = 3.0, 1e-6
+slope_numeric = (f(t0 + h) - f(t0)) / h     # finite-difference estimate of f'(3)
+print(f"numeric slope at t=3 : {slope_numeric:.4f}")
+print(f"exact   slope 2*t    : {2*t0:.4f}")  # we'll justify 2*t below
+```
+
+## The handful of rules we actually need {#sec-rules}
+
+| rule | statement |
+|---|---|
+| Power | $\dfrac{d}{dt}\,t^k = k\,t^{k-1}$ |
+| Constant factor | $\dfrac{d}{dt}\,[c\,f(t)] = c\,f'(t)$ |
+| Sum | $\dfrac{d}{dt}\,[f+g] = f' + g'$ |
+| **Chain rule** | $\dfrac{d}{dt}\,f(g(t)) = f'(g(t))\,g'(t)$ |
+
+The **chain rule** is the star of the show. The squared error is a *composition*:
+square *of* (prediction minus target). Let
+$$
+u(t)=a t + c,\qquad g(t)=\big(u(t)\big)^2 .
+$$
+Then by the chain rule (outer $=(\cdot)^2$ with derivative $2(\cdot)$, inner $u$ with
+derivative $a$):
+$$
+\boxed{\,g'(t)=2\,(a t + c)\cdot a\,}
+$$
+
+```{python}
+a, c = 2.0, -5.0
+g = lambda t: (a*t + c)**2
+t0 = 1.3
+num = (g(t0+1e-6) - g(t0))/1e-6
+ana = 2*(a*t0 + c)*a
+print(f"chain-rule check:  numeric {num:.4f}  vs  analytic {ana:.4f}")
+```
+
+Notice the shape of the answer: **2 × (residual) × (inner slope)**. Every gradient
+in this workshop is an instance of this one pattern.
+
+## Partial derivatives and the gradient {#sec-gradient}
+
+The loss depends on **many** parameters at once ($w_1,\dots,w_m,b$). A **partial
+derivative** $\frac{\partial L}{\partial w_j}$ is just the ordinary derivative with
+respect to one parameter while **holding the others fixed**.
+
+Stacking all partials into a vector gives the **gradient**:
+$$
+\nabla_w L=\Big[\tfrac{\partial L}{\partial w_1},\,\tfrac{\partial L}{\partial w_2},\,\dots,\,\tfrac{\partial L}{\partial w_m}\Big]^\top .
+$$
+The gradient is the direction of **steepest increase** of $L$. Gradient descent
+takes a small step **against** it:
+$$
+\boxed{\,\theta \leftarrow \theta - \eta\,\nabla_\theta L\,}
+$$
+
+# Part III — Putting it together: deriving the MSE gradient {#sec-derive}
+
+## Warm-up: the single-feature case (Tutorial 1) {#sec-derive-scalar}
+
+Tutorial 1 used a one-feature model $h(x)=\theta_1 x+\theta_0$ with loss
+$$
+\mathcal{L}(\theta_0,\theta_1)=\frac1N\sum_{i=1}^N(\theta_1 x_i+\theta_0-y_i)^2 .
+$$
+Apply the chain-rule pattern $g'=2\cdot(\text{residual})\cdot(\text{inner slope})$ to
+each summand, with residual $r_i=\theta_1 x_i+\theta_0-y_i$:
+
+* w.r.t. $\theta_0$, the inner slope $\partial r_i/\partial\theta_0=1$:
+$$
+\frac{\partial \mathcal{L}}{\partial \theta_0}=\frac{2}{N}\sum_{i=1}^N(\theta_1 x_i+\theta_0-y_i).
+$$
+* w.r.t. $\theta_1$, the inner slope $\partial r_i/\partial\theta_1=x_i$:
+$$
+\frac{\partial \mathcal{L}}{\partial \theta_1}=\frac{2}{N}\sum_{i=1}^N x_i\,(\theta_1 x_i+\theta_0-y_i).
+$$
+
+These are exactly the two `grad` lines in the Tutorial 1 training loop. The bias
+partial sums the residuals; the weight partial sums *feature × residual*. **Hold on
+to that distinction** — it survives unchanged into the multi-feature case.
+
+## The general case: multiple linear regression {#sec-derive-matrix}
+
+Now the HW1 model. We'll do the whole derivation in **plain summation notation** —
+no matrices, no transpose, just sums, the chain rule, and the sum rule. It is the
+cleanest way to see where every term comes from. (The matrix-shorthand version is in
+the collapsed box at the end, for when you want the compact one-liner.)
+
+**Step 1 — write the loss with sums.** A prediction is a sum over the $m$ features,
+so the residual for sample $i$ is
+$$
+r_i=\Big(\sum_{k=1}^{m}X_{ik}\,w_k\Big)+b-y_i ,
+$$
+and the mean squared error over a batch of $B$ samples is a **double sum**:
+$$
+L(w_1,\dots,w_m,b)=\frac1B\sum_{i=1}^{B} r_i^{\,2}
+=\frac1B\sum_{i=1}^{B}\Big(\sum_{k=1}^{m}X_{ik}\,w_k+b-y_i\Big)^{2}.
+$$
+The summation index $k$ runs over *all* weights; $j$ (below) is the *one* weight we
+differentiate with respect to. Keeping the two letters separate is the whole trick.
+
+**Step 2 — differentiate w.r.t. one weight $w_j$.** Differentiate the outer sum term
+by term (sum rule), applying the chain-rule pattern from @sec-rules to each squared
+bracket (*outer $(\cdot)^2\to 2(\cdot)$, times inner slope*):
+$$
+\frac{\partial L}{\partial w_j}
+=\frac1B\sum_{i=1}^{B} 2\Big(\sum_{k=1}^{m}X_{ik}w_k+b-y_i\Big)\cdot
+\frac{\partial}{\partial w_j}\Big(\sum_{k=1}^{m}X_{ik}w_k+b-y_i\Big).
+$$
+The **inner derivative** is still pure sums. The terms $b$ and $y_i$ have no $w_j$
+(slope $0$), and in $\sum_k X_{ik}w_k$ only the $k=j$ term contains $w_j$:
+$$
+\frac{\partial}{\partial w_j}\sum_{k=1}^{m}X_{ik}w_k
+=\sum_{k=1}^{m}X_{ik}\,\frac{\partial w_k}{\partial w_j}
+=\sum_{k=1}^{m}X_{ik}\,\delta_{kj}=X_{ij},
+$$
+where $\delta_{kj}=1$ if $k=j$ and $0$ otherwise (the weights are independent of one
+another). Substituting back, and recognizing the bracket as $r_i$:
+$$
+\boxed{\;\frac{\partial L}{\partial w_j}=\frac{2}{B}\sum_{i=1}^{B} r_i\,X_{ij}\;}
+\qquad j=1,\dots,m.
+$$
+One scalar formula per weight: *twice the average, over the batch, of
+(feature $j$) × (residual)*.
+
+**Step 3 — the bias, the same way.** Its inner slope is just its coefficient in
+$r_i$, namely $1$, so the feature factor drops out:
+$$
+\boxed{\;\frac{\partial L}{\partial b}=\frac{2}{B}\sum_{i=1}^{B} r_i\;}
+$$
+i.e. *twice the average residual* — no feature weighting, since $b$ shifts every
+prediction equally.
+
+**Step 4 — the per-element update, and the code with no matrices.** Gradient descent
+updates each parameter on its own:
+$$
+w_j \leftarrow w_j-\eta\,\frac{2}{B}\sum_{i=1}^{B} r_i\,X_{ij}\quad(\forall j),
+\qquad
+b \leftarrow b-\eta\,\frac{2}{B}\sum_{i=1}^{B} r_i .
+$$
+Written literally, that is two nested loops — no matrix multiply anywhere:
+```python
+for j in range(m):
+    grad_w[j] = (2.0/B) * sum(resid[i] * Xb[i, j] for i in range(B))
+grad_b = (2.0/B) * sum(resid[i] for i in range(B))
+```
+
+**Step 5 — stack the partials and watch the matrix notation appear.** Step 2 gave us
+$m$ separate scalar formulas, one per weight. The **gradient** is just those $m$
+numbers collected into a column vector. Let's write them all out and factor the
+common $\frac2B$:
+$$
+\nabla_w L=
+\begin{bmatrix}\partial L/\partial w_1\\[3pt]\partial L/\partial w_2\\[3pt]\vdots\\[3pt]\partial L/\partial w_m\end{bmatrix}
+=
+\begin{bmatrix}\frac2B\sum_{i} r_i\,X_{i1}\\[3pt]\frac2B\sum_{i} r_i\,X_{i2}\\[3pt]\vdots\\[3pt]\frac2B\sum_{i} r_i\,X_{im}\end{bmatrix}
+=\frac2B
+\begin{bmatrix}\sum_{i} X_{i1}\,r_i\\[3pt]\sum_{i} X_{i2}\,r_i\\[3pt]\vdots\\[3pt]\sum_{i} X_{im}\,r_i\end{bmatrix}.
+$$
+Now look at that last column **on its own**. Compute the matrix–vector product
+$X^\top r$ directly: row $j$ of $X^\top$ is column $j$ of $X$, i.e.
+$(X_{1j},X_{2j},\dots,X_{Bj})$, and dotting it with $r=(r_1,\dots,r_B)^\top$ gives
+$$
+X^\top r=
+\begin{bmatrix}
+X_{11}&X_{21}&\cdots&X_{B1}\\
+X_{12}&X_{22}&\cdots&X_{B2}\\
+\vdots&\vdots&&\vdots\\
+X_{1m}&X_{2m}&\cdots&X_{Bm}
+\end{bmatrix}
+\begin{bmatrix}r_1\\r_2\\\vdots\\r_B\end{bmatrix}
+=
+\begin{bmatrix}\sum_{i} X_{i1}\,r_i\\[3pt]\sum_{i} X_{i2}\,r_i\\[3pt]\vdots\\[3pt]\sum_{i} X_{im}\,r_i\end{bmatrix}.
+$$
+The two columns are **identical, entry for entry** — the $j$-th component of both is
+$\sum_i X_{ij}r_i$. So the vector we built by hand from the sum-rule partials *is*
+$X^\top r$; we didn't assume any matrix calculus, it simply fell out of stacking:
+$$
+\boxed{\,\nabla_w L=\frac{2}{B}\,X^\top r\,}\;\Longleftrightarrow\;
+\texttt{grad\_w = (2.0/B)*(Xb.T @ resid)} .
+$$
+The same move on the bias: $\displaystyle\sum_{i} r_i=\mathbf 1^\top r$ (dotting $r$
+with the all-ones vector), so
+$$
+\boxed{\,\frac{\partial L}{\partial b}=\frac{2}{B}\sum_{i} r_i=\frac2B\,\mathbf 1^\top r\,}\;\Longleftrightarrow\;
+\texttt{grad\_b = (2.0/B)*resid.sum()} .
+$$
+That's the whole bridge: the matrix form is the column of sum-formulas, rewritten as
+one product. It buys **compactness and speed** (a single BLAS call instead of the
+Python double loop of Step 4) — the math is line-for-line identical to Steps 2–3.
+
+::: {.callout-note collapse="true"}
+## Optional: the same derivation in matrix notation
+If you prefer to stay in vector/matrix land the whole way, here it is. Write the
+residual **vector** $r=Xw+b\mathbf 1-y\in\mathbb R^{B}$ and
+$L=\frac1B\lVert r\rVert_2^2$. Differentiating one weight,
+$$
+\frac{\partial L}{\partial w_j}
+=\frac1B\sum_{i=1}^B 2\,r_i\,\frac{\partial r_i}{\partial w_j},
+\qquad
+\frac{\partial r_i}{\partial w_j}
+=\frac{\partial}{\partial w_j}\Big(\textstyle\sum_k X_{ik}w_k+b-y_i\Big)
+=\sum_k X_{ik}\delta_{kj}=X_{ij}.
+$$
+Hence $\dfrac{\partial L}{\partial w_j}=\dfrac{2}{B}\sum_i X_{ij}r_i=\dfrac{2}{B}\big(X^\top r\big)_j$,
+and stacking over $j$,
+$$
+\nabla_w L=\frac{2}{B}\,X^\top r,\qquad \frac{\partial L}{\partial b}=\frac{2}{B}\sum_i r_i=\frac{2}{B}\,\mathbf 1^\top r .
+$$
+Same answer, same Kronecker-delta step doing the real work — only the bookkeeping
+looks different. The `2/B` is the `2` from the power rule times the `1/B` average;
+`Xb.T @ resid` is the feature-weighted residual sum; `resid.sum()` is the plain
+residual sum for the bias.
+:::
+
+::: {.callout-important}
+## The mapping, line by line
+$$
+\begin{aligned}
+\texttt{resid = self.\_linear(Xb) - yb} &\;\equiv\; r = Xw + b - y\\
+\texttt{grad\_w = (2/B) * (Xb.T @ resid)} &\;\equiv\; \nabla_w L = \tfrac{2}{B}X^\top r\\
+\texttt{grad\_b = (2/B) * resid.sum()} &\;\equiv\; \partial L/\partial b = \tfrac{2}{B}\textstyle\sum_i r_i\\
+\texttt{self.w -= self.lr * grad\_w} &\;\equiv\; w \leftarrow w - \eta\,\nabla_w L\\
+\texttt{self.b -= self.lr * grad\_b} &\;\equiv\; b \leftarrow b - \eta\,\partial L/\partial b
+\end{aligned}
+$$
+:::
+
+## Trust, but verify: a numerical gradient check {#sec-gradcheck}
+
+A derivation is only believable if it matches a **finite-difference** estimate.
+We compute the analytic gradient and compare it to nudging each parameter by a tiny
+$h$ — exactly the limit definition from @sec-derivative. This is also a great way to
+debug your own HW gradients.
+
+```{python}
+# tiny synthetic problem
+B, m = 6, 3
+Xb = rng.normal(size=(B, m))
+w_t = np.array([1.5, -2.0, 0.7]); b_t = 0.3
+yb = Xb @ w_t + b_t + 0.1*rng.normal(size=B)   # noisy targets
+
+# pick an arbitrary (w, b) to test the gradient at
+w = rng.normal(size=m); b = 0.5
+
+def loss(w, b):
+    r = Xb @ w + b - yb
+    return np.mean(r**2)                       # (1/B) * sum r^2
+
+# --- analytic gradient (our derivation) ---
+resid   = Xb @ w + b - yb
+grad_w  = (2.0/B) * (Xb.T @ resid)
+grad_b  = (2.0/B) * resid.sum()
+
+# --- numerical gradient (finite differences) ---
+h = 1e-6
+num_w = np.zeros(m)
+for j in range(m):
+    e = np.zeros(m); e[j] = h
+    num_w[j] = (loss(w+e, b) - loss(w-e, b)) / (2*h)
+num_b = (loss(w, b+h) - loss(w, b-h)) / (2*h)
+
+print("analytic grad_w :", grad_w)
+print("numeric  grad_w :", num_w)
+print("analytic grad_b : %.5f" % grad_b)
+print("numeric  grad_b : %.5f" % num_b)
+print("max abs error   : %.2e" % max(np.abs(grad_w-num_w).max(), abs(grad_b-num_b)))
+```
+
+The analytic and numerical gradients agree to ~$10^{-9}$ — the derivation is
+correct.
+
+# Part IV — From gradient to the training loop {#sec-loop}
+
+## Why subtract, why $\eta$, why batches {#sec-why-loop}
+
+* **Subtract** the gradient (@sec-gradient): the gradient points uphill, we want
+  downhill.
+* **Learning rate $\eta$**: the gradient gives a *direction*; $\eta$ sets the
+  *step length*. Too small ⇒ slow; too large ⇒ overshoot/diverge (recall in HW1 the
+  collinear genes make the loss steep, so $\eta\gtrsim0.007$ explodes).
+* **Mini-batches**: computing $\nabla L$ on a random batch of $B$ samples instead of
+  all $n$ is cheaper and adds helpful noise. The `1/B` (not `1/n`) in the gradient is
+  why the batch gradient is an unbiased estimate of the full one.
+
+## The full loop, now fully explained {#sec-full-loop}
+
+Here is a complete, runnable training loop — the HW1 structure on the synthetic data
+above. Every line is annotated with the part of the workshop it comes from.
+
+```{python}
+def train(X, y, lr=0.05, batch_size=3, n_epochs=60, seed=0):
+    n, m = X.shape
+    rng = np.random.default_rng(seed)
+    w = np.zeros(m); b = 0.0                 # init (Part II: start somewhere)
+    history = []
+    for epoch in range(n_epochs):
+        idx = rng.permutation(n)             # shuffle -> different batches each epoch
+        for start in range(0, n, batch_size):
+            bi = idx[start:start+batch_size]
+            Xb, yb = X[bi], y[bi]
+            B = Xb.shape[0]
+            resid  = Xb @ w + b - yb         # r = Xw + b - y      (Part I: matrix-vec)
+            grad_w = (2.0/B) * (Xb.T @ resid)# ∇_w L = (2/B) Xᵀr    (sec-derive-matrix)
+            grad_b = (2.0/B) * resid.sum()   # ∂L/∂b = (2/B) Σr     (sec-derive-matrix)
+            w -= lr * grad_w                 # w ← w − η ∇_w L      (sec-gradient)
+            b -= lr * grad_b                 # b ← b − η ∂L/∂b
+        history.append(np.mean((X @ w + b - y)**2))   # full-data MSE this epoch
+    return w, b, history
+
+# a larger synthetic dataset so the fit can actually recover the true parameters
+N = 2000
+X_big = rng.normal(size=(N, 3))
+y_big = X_big @ w_t + b_t + 0.1*rng.normal(size=N)
+
+w_hat, b_hat, hist = train(X_big, y_big, lr=0.05, batch_size=64, n_epochs=60)
+print("true    w =", w_t, " b = %.3f" % b_t)
+print("learned w =", w_hat, " b = %.3f" % b_hat)
+
+plt.figure(figsize=(6,4))
+plt.plot(hist)
+plt.xlabel("epoch"); plt.ylabel("MSE"); plt.title("Loss vs epochs (it goes down!)")
+plt.grid(True); plt.tight_layout(); plt.show()
+```
+
+The learned $w,b$ recover the true values, and the loss curve decreases — the same
+behaviour you saw in HW1's training plot, now from first principles.
+
+## Exercises {#sec-exercises}
+
+::: {.callout-note collapse="true"}
+## Exercise 2 — shapes
+For a batch with $B=256$ samples and $m=943$ features, state the shapes of `Xb`,
+`resid`, `Xb.T`, and `grad_w`.
+
+**Solution.** `Xb`: $256\times943$; `resid`: $256$; `Xb.T`: $943\times256$;
+`grad_w = Xb.T @ resid`: $943$ (one number per weight, matching `w`). The bias
+gradient is a single scalar.
+:::
+
+::: {.callout-note collapse="true"}
+## Exercise 3 — derive an L1-style gradient
+Suppose we used the **mean absolute error** $L=\frac1B\sum_i|r_i|$ instead of MSE.
+Using $\frac{d}{dt}|t| = \operatorname{sign}(t)$ and the chain rule, what is
+$\nabla_w L$?
+
+**Solution.** $\dfrac{\partial L}{\partial w_j}=\dfrac1B\sum_i \operatorname{sign}(r_i)\,X_{ij}
+=\dfrac1B\big(X^\top \operatorname{sign}(r)\big)_j$, i.e. $\nabla_w L=\frac1B X^\top\operatorname{sign}(r)$.
+Same structure as MSE, but the residual is replaced by its sign — large errors no
+longer dominate (more robust to outliers; cf. HW1 limitation 3.5.7).
+:::
+
+::: {.callout-note collapse="true"}
+## Exercise 4 — the factor of 2
+Some textbooks define MSE as $\frac{1}{2B}\sum_i r_i^2$. What happens to `grad_w`,
+and does the trained model change?
+
+**Solution.** The $\tfrac12$ cancels the $2$ from the power rule, giving
+$\nabla_w L=\frac1B X^\top r$ (no leading 2). The gradient is just rescaled by a
+constant, which is equivalent to halving the learning rate — with $\eta$ retuned the
+trained model is identical. The factor is cosmetic.
+:::
+
+## Recap {#sec-recap}
+
+* **Linear algebra** gave us the model $h_\theta(x)=w^\top x+b$, its batched form
+  $\hat y = Xw+b$, and the transpose identity $\big(X^\top r\big)_j=\sum_i X_{ij}r_i$.
+* **Calculus** gave us the derivative as a slope, the chain-rule pattern
+  *2 × residual × inner-slope*, and the gradient as the vector of partials pointing
+  uphill.
+* Combining them, the MSE gradient is $\nabla_w L=\frac{2}{B}X^\top r$ and
+  $\partial L/\partial b=\frac{2}{B}\sum_i r_i$ — **exactly** the two `grad` lines in
+  the HW1 loop — and gradient descent subtracts $\eta$ times those.
+
+You now have the full chain from raw definitions to working code.
