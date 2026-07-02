@@ -160,8 +160,9 @@ write the final solutions alone and understand them fully
 | Sun 28.06.26 | 12 (ML 1)         | Simple regression models       | **HW1** (Regression)                   | —                      |
 | Sun 05.07.26 | 13 (ML 2)         | fully-connected neural network | **HW2** (Fully-Connected)              | —                      |
 | Sun 12.07.26 | 14 (ML 3)         | CNNs                           | —                                      | **HW1**                |
-| Sun 19.07.26 | 15 (ML 4)         | Base-calling + Transformers    | **Final Project** (CNN + Transformers) | **HW2**                |
-| Wed 09.09.26 | — _(exam period)_ | —                              | —                                      | **Final Project**      |
+| Sun 19.07.26 | 15 (ML 4)         | Base-calling + Transformers    | **Final Project** (CNN + Transformers) | —                      |
+| Sun 26.07.26 | —                 | — _(exam period starts)_       | —                                      | **HW2**                |
+| Wed 09.09.26 | —                 | —                              | —                                      | **Final Project**      |
 
 ## Course Tips {data-name="Tips"}
 + Programming, Linear Algebra, New terminology - No need to understand all the underlying math to implement deep learning models.
