@@ -10,6 +10,9 @@ __pycache__/
 *.txt
 *sol*
 
+# Keep homework solution reports (and their build artifacts) out of the repo
+homeworks/**/report/
+
 # Keep Quarto extension template resources (not build artifacts)
 !**/_extensions/**/*.tex
 !**/_extensions/**/*.bst
