@@ -3,6 +3,10 @@
 *.csv
 *.pdf
 *.html
+*.aux
+*.log
+*.out
+*.toc
 *_files/
 data/
 __pycache__/
