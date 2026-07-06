@@ -44,12 +44,17 @@ In each task, we have provided you with a "skeleton" (Jupyter notebook). This co
 
 ## Resources
 
-The code for each task is a Jupyter notebook in the course repository. Get the latest version from the `main` branch (download the repo as described in HW0), or download a notebook directly:
+All the code lives in the course repository. Get it with either:
+
+- **[Download all the code (ZIP)](https://github.com/mathoory/00660121-medical-diagnostics/archive/refs/heads/main.zip)**, then unzip it and open the notebooks in Jupyter or VSCode.
+- or clone it with `git clone https://github.com/mathoory/00660121-medical-diagnostics` (see HW0).
+
+Inside, the notebooks for this assignment are under `homeworks/03 HW2/src/`:
 
 | Notebook | What you build in it |
 |----------|----------------------|
-| [`task-1.ipynb`](https://raw.githubusercontent.com/mathoory/00660121-medical-diagnostics/main/homeworks/03%20HW2/src/task-1/task-1.ipynb) | **Task 1**: a deep neural network from scratch in NumPy. You implement the forward and backward passes of a linear layer, ReLU, and MSE loss, then the training loop. |
-| [`task-2.ipynb`](https://raw.githubusercontent.com/mathoory/00660121-medical-diagnostics/main/homeworks/03%20HW2/src/task-2/task-2.ipynb) | **Task 2**: a PyTorch DNN trained on the gene-expression data and compared against a linear-regression baseline. |
+| `task-1/task-1.ipynb` | **Task 1**: a deep neural network from scratch in NumPy. You implement the forward and backward passes of a linear layer, ReLU, and MSE loss, then the training loop. |
+| `task-2/task-2.ipynb` | **Task 2**: a PyTorch DNN trained on the gene-expression data and compared against a linear-regression baseline. |
 
 {{< pagebreak >}}
 
