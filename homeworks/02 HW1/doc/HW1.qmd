@@ -305,10 +305,10 @@ In essence, the goal of the report is to be a *concise* summary of your work, it
 
 | Component                                                                    | Pts |
 |:-----------------------------------------------------------------------------|:----|
-| Written Report  | 30  |
-| Full implementation of the model (Sections 3.1–3.4)                            | 25  |
-| Written answers (3.5)                                                     | 25  |
-| Model performance                                      | 15  |
+| Written Report                                                               | 30  |
+| Full implementation of the model (Sections 3.1–3.4)                          | 25  |
+| Written answers (3.5)                                                        | 25  |
+| Model performance                                                            | 15  |
 | Results reproducibility                                                      | 5   |
 
 
