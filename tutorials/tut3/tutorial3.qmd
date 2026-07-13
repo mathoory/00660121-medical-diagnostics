@@ -1,8 +1,8 @@
 ---
 title: "Medical Diagnostics"
-subtitle: "Tutorial 7: CNN<br><br>Spring 2025<br><br> Faculty of Biotechnology and Food Engineering<br> Technion Israel Institute of Technology<br><br> TA: Mattan Hoory"
+subtitle: "Tutorial 3: CNN<br><br>Spring 2026<br><br> Faculty of Biotechnology and Food Engineering<br> Technion Israel Institute of Technology<br><br> TA: Mattan Hoory"
 format:
-  revealjs: 
+  revealjs:
     code-overflow: scroll
     code-line-wrapping: true
     title-slide-attributes:
@@ -27,58 +27,53 @@ revealjs-plugins:
 # 1 Intro
 :::
 
-## משאל המרצה והמתרגל
-Open now!
+## 1.1 משאל המרצה והמתרגל
+Open now! We would love to hear your feedback on the course and the tutorials.
 
-![](assets/questionair.png){fig-align="center" width=40%}
+![](assets/extended.svg){fig-align="center" width=40%}
+
+## 1.2 Today's plan
+- **Images with CNNs**: convolution, filters, pooling, and why they beat fully connected networks on images.
+- **From images to sequences**: how the same ideas power the CNN in your **final project** (RNA-protein binding).
+- **Where this goes next**: residual connections and U-Net (enrichment).
+- **Code**: LeNet, and the final-project CNN training loop.
 
 ::: {.center}
 # 2 Tutorial 2 recap {data-name="Recap"}
-MLP + Backpropagation
+Deep Neural Networks + Backpropagation
 :::
 
-## 3.1 Representing images as tensors
-- Images are represented as 3D tensors (height, width, channels)
-- Each pixel is represented by a value (e.g., grayscale) or multiple values (e.g., RGB channels)
-<div style="text-align: center;">
-![](assets/tensor.png){fig-align="center" width=45%}
-</div>
-
-## Flattening a 1D image
-<div style="text-align: center;">
-![](assets/flatten.png){fig-align="center" width=45%}
-</div>
-
-
-## 2.1 MLP
+## 2.1 Deep neural networks
 - Example: classify if an image is "5" or "6"
 <div style="text-align: center;">
 ![](assets/deep2.png)
 </div>
 
-## 2.1  Backpropagation
+## 2.2 Backpropagation
 - Used to compute gradients and update weights in neural networks.
 - Example (MSE): $\mathcal{L} = \frac{1}{N} \sum_{i=1}^N (y_i - \hat{y}_i)^2$
 <div style="text-align: center;">
 ![](assets/backprop_diagram.png)
 </div>
 
-## 2.1 Training MLPs
-- Almost a fully working code :-)
-```{.python style="font-size: 1.2em;" code-line-numbers="|8|9|10|11|12|13|14|15"}
+## 2.3 Training a network - Almost :)
+
+```{.python style="font-size: 1.2em;" code-line-numbers="|4,5,6,7,8|10|11|12|13|14|15|16|17"}
 import SGD
 import MSE
 
-def model(X):
-  ...
-  return Y
+def model(x):                    # x = one input vector
+    a1 = relu(W1 @ x  + b1)      # input  -> hidden layer 1
+    a2 = relu(W2 @ a1 + b2)      # hidden -> hidden layer 2
+    y  =      W3 @ a2 + b3       # hidden -> output (linear)
+    return y
 
 def train(model, data, num_epochs=10):
     for epoch in range(num_epochs):
-        for X, Y in data:
+        for x, y in data:
             SGD.zero_grad()
-            Y_hat = model(X)
-            loss = MSE(Y_hat, Y)
+            y_hat = model(x)
+            loss = MSE(y_hat, y)
             loss.backward()
             SGD.step()
 ```
@@ -89,17 +84,32 @@ def train(model, data, num_epochs=10):
 Slides based on 236781 Deep learning course at the Technion (Dr. Haim Baskin)
 :::
 
-## 3.2 Images and MLP {.smaller}
-- MLPs (Multi-Layer Perceptrons) are fully connected networks
-- Each neuron in an MLP is connected to every pixel in the input image
-- MLPs struggle with high-dimensional data like images due to the large number of parameters - Nearby pixels statistically related
-  - 224x224 RGB image = 150,528 dimensions
+## 3.1 Representing images as tensors
+- Images are represented as 3D tensors (height, width, channels)
+- Each pixel is represented by a value (e.g., grayscale) or multiple values (e.g., RGB channels)
+<div style="text-align: center;">
+![](assets/tensor.png){fig-align="center" width=45%}
+</div>
+
+## 3.2 Flattening an image
+<div style="text-align: center;">
+![](assets/flatten.png){fig-align="center" width=45%}
+</div>
+
+## 3.3 Images and DNNs {.smaller}
+- Deep neural networks (fully connected) connect each neuron to **every** pixel in the input image.
+- Possible issues?
 
 <div style="text-align: center;">
 ![](assets/classification-using-mlp.png){fig-align="center" width=60%}
 </div>
 
-## 3.3 Convolution in 1D
+::: {.notes}
+- Fully connected networks struggle with high-dimensional data like images due to the large number of parameters - Nearby pixels statistically related
+  - 224x224 RGB image = 150,528 dimensions
+:::
+
+## 3.4 Convolution in 1D
 Convolution* in 1D
 - Input vector x:
 
@@ -121,24 +131,24 @@ $$
 
 Kernel size $=3$
 
-## Convoulution in 1D example
+## 3.5 Convolution in 1D example
 <div style="text-align: center;">
 ![](assets/1d-example.png){fig-align="center" width=65%}
 </div>
 
-## Convolution in 1D (cont.)
+## 3.6 Convolution in 1D (cont.)
 - **Parameter sharing**: The same filter is applied across the entire input, reducing the number of parameters.
 <div style="text-align: center;">
 ![](assets/Picture1.png){fig-align="center" width=60%}
 </div>
 
-## Zeros padding
+## 3.7 Zero padding
 - To maintain the same output size as input (not always), we can add zeros around the input vector.
 <div style="text-align: center;">
 ![](assets/Picture2.png){fig-align="center" width=100%}
 </div>
 
-## Properties of convolutional filters
+## 3.8 Properties of convolutional filters
 - **Stride**: shift by k positions for each output
   + Decreases size of output relative to input
 - **Kernel size**: weight a different number of inputs for each output
@@ -148,13 +158,13 @@ Kernel size $=3$
   + Combine information from a larger area
   + Fewer parameters
 
-## Stride, Kernel Size, and Dilation
+## 3.9 Stride, Kernel Size, and Dilation
 ![](assets/ksd-empty.png){width="100%"}
 
-## Stride, Kernel Size, and Dilation
+## 3.9 Stride, Kernel Size, and Dilation
 ![](assets/ksd-full.png){width="100%"}
 
-## Fully connected vs. convolutional layers {.smaller}
+## 3.10 Fully connected vs. convolutional layers {.smaller}
 - Fully connected layers connect every input to every output, leading to a large number of parameters.
 - Convolutional layers use filters (kernels) to scan the input, sharing weights across space and reducing the number of parameters.
 Convolutional network:
@@ -173,12 +183,12 @@ $$
 h_i=\mathrm{a}\left[\beta_i+\sum_{j=1}^D \omega_{i j} x_j\right]
 $$
 
-## Special case of fully-connected network
+## 3.11 Special case of fully-connected network
 <div style="text-align: center;">
 ![](assets/Picture3.png){fig-align="center" width=90%}
 </div>
 
-## Two output channels
+## 3.12 Two output channels
 - Convolutional layers can have multiple output channels (feature maps).
 - Each channel is produced by a different filter.
 - Prevents information loss and allows the network to learn different features.
@@ -186,7 +196,7 @@ $$
 ![](assets/Picture4.png){fig-align="center" width=60%}
 </div>
 
-## Two input channels, one output channel {.smaller}
+## 3.13 Two input channels, one output channel {.smaller}
 - Convolutional layers can also handle multiple input channels (e.g., RGB images).
 - Each input channel is convolved with its own filter, and the results are summed to produce the output channel.
 - This allows the network to learn features from different input channels.
@@ -194,7 +204,7 @@ $$
 ![](assets/Picture5.png){fig-align="center" width=30%}
 </div>
 
-## How many paramters?
+## 3.14 How many parameters?
 How many parameters?
 - If there are $C_i$ input channels and kernel size K
 
@@ -208,35 +218,35 @@ $$
 \boldsymbol{\Omega} \in \mathbb{R}^{C_i \times C_o \times K} \quad \boldsymbol{\beta} \in \mathbb{R}^{C_o}
 $$
 
-## Receptive fields
+## 3.15 Receptive fields
 - The receptive field of a neuron is the region of the input that affects its output.
 <div style="text-align: center;">
 ![](assets/Picture6.png){fig-align="center"}
 </div>
 
-## Classification using CNNs
-- Input: flattened image
+## 3.16 Classification using CNNs
+- Input: image
 - Output: probabilities for each class
 
 <div style="text-align: center;">
 ![](assets/Picture7.png){fig-align="center" width=65%}
 </div>
 
-## Results of classification using CNNs
+## 3.17 Results of classification using CNNs
 <div style="text-align: center;">
 ![](assets/Picture8.png){fig-align="center"}
 </div>
 
-## 2D Convolution {.smaller}
+## 3.18 2D Convolution {.smaller}
 - Input image is a 2D matrix, and the filter is also a 2D $K\times K$ matrix.
 <iframe src="https://ezyang.github.io/convolution-visualizer/" width="1280" height="520" style="border: 1px solid #ccc" frameborder=0></iframe>
 
-## Convoulution in 2D example
+## 3.19 Convolution in 2D example
 <div style="text-align: center;">
 ![](assets/2d-example.png){fig-align="center"}
 </div>
 
-## Number of Parameters in 2D Convolution
+## 3.20 Number of Parameters in 2D Convolution
 - If there are $C_i$ input channels and kernel size $\mathrm{K} \times \mathrm{K}$
 
 $$
@@ -250,13 +260,13 @@ $$
 $$
 
 
-## Channel in 2D Convolution
+## 3.21 Channels in 2D Convolution
 - Each channel in a 2D convolution corresponds to a different feature map.<div style="text-align: center;">
 ![](assets/Picture9.png){fig-align="center"}
 </div>
 
 
-## Pooling
+## 3.22 Pooling
 - Pooling layers reduce the spatial dimensions of the input, retaining important features while reducing computational complexity.
 - No learnable parameters.
 
@@ -264,22 +274,22 @@ $$
 ![](assets/pooling.png){fig-align="center" width="80%"}
 </div>
 
-## AlexNet (2012)
+## 3.23 AlexNet (2012)
 - One of the first successful CNN architectures
 
 <div style="text-align: center;">
 ![](assets/Picture10.png){fig-align="center" width="55%"}
 </div>
 
-## But what does the CNN "see"?
+## 3.24 But what does the CNN "see"?
 <div style="text-align: center;">
 ![](assets/feature_hierarchy.png){fig-align="center" width="60%"}
 </div>
 
-## But what does the CNN **really** "see"?
+## 3.25 But what does the CNN **really** "see"?
 <iframe src="https://adamharley.com/nn_vis/cnn/2d.html" width="1280" height="720" style="border: 1px solid #ccc" frameborder=0></iframe>
 
-## Data augmentation {.smaller}
+## 3.26 Data augmentation {.smaller}
 - Data augmentation is a technique to artificially increase the size of the training dataset by applying transformations to the original images.
 - Common transformations include rotation, scaling, flipping, and cropping.
 
@@ -287,66 +297,156 @@ $$
 ![](assets/Picture11.png){fig-align="center" width="70%"}
 </div>
 
-
-## Bounding boxes (VGG16) example {.smaller}
-- Goal: characterize the ligation number of DNA origami nanostructures in transmission electron microscopy (TEM) images
+## 3.27 CNNs in the lab: DNA origami (VGG16) {.smaller}
+- Goal: characterize the ligation number of **DNA origami** nanostructures in transmission electron microscopy (TEM) images.
 <div style="text-align: center;">
-![](assets/origami.webp){fig-align="center" width="50%"}
+![](assets/origami.webp){fig-align="center" width="46%"}
 </div>
 
 <div style="font-size: 0.6em;">
-[1] Characterizing DNA Origami Nanostructures in TEM Images Using Convolutional Neural Networks
-Xingfei Wei, Qiankun Mo, Chi Chen, Mark Bathe, and Rigoberto Hernandez
-Journal of Chemical Information and Modeling Article ASAP
-DOI: 10.1021/acs.jcim.5c00330
-</div>
-
-## One-Hot Encoding for DNA Sequences {.smaller}
-- One-hot encoding is a technique to represent categorical variables as binary vectors.
-- Each category is represented by a vector with a single 1 and the rest 0s.
-- For DNA sequences, each nucleotide (A, T, C, G) is represented by a unique vector.
-
-<div style="text-align: center;">
-![](assets/onehot.png){fig-align="center" width="90%"}
+[1] Characterizing DNA Origami Nanostructures in TEM Images Using Convolutional Neural Networks. Xingfei Wei, Qiankun Mo, Chi Chen, Mark Bathe, and Rigoberto Hernandez. Journal of Chemical Information and Modeling. DOI: 10.1021/acs.jcim.5c00330
 </div>
 
 
 ::: {.center}
-# 3 Residual Connections {data-name="Resnet"}
+# 4 From sequences to binding sites {data-name="Project"}
+A sneak peek at the final project CNN
 :::
 
-## 3.1 Residual Connections
-- Residual connections allow gradients to flow more easily through the network.
-<div style="text-align: center;">
-![](assets/residual.png){fig-align="center" width="80%"}
+## 4.1 The final project: predicting RNA-protein binding {.smaller}
+- **RNA-binding proteins (RBPs)** regulate RNA after transcription. **CLIP-Seq** captures short RNA fragments bound to a specific RBP (here: **AGO2**).
+- Your CNN learns the function
+$$
+f(\text{sequence}) = P(\text{binding}\mid \text{sequence})
+$$
+- Same CNN toolbox as images, but the "image" is now a **sequence**.
+- You will: one-hot encode sequences, train a CNN, evaluate with **ROC/AUC**, then read the learned **motifs**.
+
+## 4.2 One-hot encoding RNA sequences {.smaller}
+- Each nucleotide (**A, C, G, U**) becomes a column with a single 1 (order **must** match your encoder: A, C, G, U).
+- A length-$L$ sequence becomes a $4 \times L$ binary matrix. Padding / unknown bases become uniform $0.25$.
+
+<div style="text-align: center; font-size: 0.8em;">
+
+| | pos 1 (A) | pos 2 (C) | pos 3 (G) | pos 4 (U) |
+|:--|:--:|:--:|:--:|:--:|
+| **A** | 1 | 0 | 0 | 0 |
+| **C** | 0 | 1 | 0 | 0 |
+| **G** | 0 | 0 | 1 | 0 |
+| **U** | 0 | 0 | 0 | 1 |
+
 </div>
 
+- In the project, sequences are padded / truncated to a fixed length $L = 501$.
 
-## 3.2 U-Net 
-<div style="text-align: center;">
-![](assets/u-net-architecture.png){fig-align="center" width="80%"}
+## 4.3 A sequence is a $(1 \times 4 \times L)$ "image" {.smaller}
+- Stack the one-hot columns into a grid: height $= 4$ (A, C, G, U rows), width $= L$ (position), one dummy channel: input shape $(N, 1, 4, L)$, a batch of tiny grayscale images.
+- A $4 \times 10$ filter spans **all four rows** and 10 positions at once, so it slides only along the sequence and **collapses the height to 1**, one value per placement.
+
+<div style="text-align:center;">
+![](assets/seq_conv.svg){fig-align="center" width="82%"}
 </div>
 
-## 3.3 U-Net: Results
-<div style="text-align: center;">
-![](assets/unet-results.png){fig-align="center" width="80%"}
+## 4.4 A first-layer filter is a motif detector {.smaller}
+- A $4 \times 10$ filter holds one weight per (nucleotide, position) over a 10-base window.
+- Sliding it gives a **high activation wherever a preferred 10-mer appears** - a **motif detector**.
+- Reading these learned filters back out is the interpretation part of the project.
+
+## 4.5 Your turn: from LeNet to a sequence CNN {.smaller}
+The project CNN reuses the **same LeNet building blocks** on the $(1, 4, L)$ sequence "image" - your job is to assemble them.
+
+<div style="font-size:0.8em;">
+
+| Building block | Its job on a sequence |
+|:--|:--|
+| `Conv2d` | scan for patterns (motifs) |
+| `ReLU` | non-linearity |
+| `MaxPool` | shrink length, keep strong signals |
+| `Flatten` + `Linear` | features into one score |
+
 </div>
 
-(A Complete Electron Microscopy Volume of the Brain of Adult Drosophila melanogaster)
+- **You choose** (`TODO`): kernel size, number of filters, conv/pool blocks, FC width.
+- **Fixed**: first conv spans all 4 rows ($4 \to 1$); final layer `nn.Linear(..., 1)`; **no sigmoid inside** (the loss adds it).
 
-## U-net: Results
-<div style="text-align: center;">
-![](assets/hhmi_mito.png){fig-align="center" width="80%"}
+## 4.6 From a score to a probability: the sigmoid {.smaller}
+Task 2 predicted a **number** (regression, MSE). Binding is a **yes / no** question, so the CNN's last layer outputs one raw **score (logit)** $z \in \mathbb{R}$: any real number, not yet a probability.
+
+- The **sigmoid** squashes $z$ into $(0,1)$, so we read it as the probability the sequence binds: $\;\hat{p} = \sigma(z) = \frac{1}{1 + e^{-z}}$
+- $z \gg 0 \Rightarrow \hat{p} \approx 1$ (binds);  $z \ll 0 \Rightarrow \hat{p} \approx 0$ (does not);  $z = 0 \Rightarrow \hat{p} = 0.5$
+
+<div style="text-align:center;">
+![](assets/sigmoid.svg){fig-align="center" width="44%"}
 </div>
-- training the unet model on the HHMI mitochondria data can be performed, with subsequent prediction and visualization of the binary segmentation of mitochondria
-- [https://hpc.nih.gov/apps/unet.html](https://hpc.nih.gov/apps/unet.html)
+
+## 4.7 Measuring the error: binary cross-entropy {.smaller}
+For sequence $i$: label $y_i \in \{0,1\}$ (1 = binds), model probability $\hat{p}_i = \sigma(z_i)$.
+
+$$
+\mathcal{L} = -\frac{1}{N}\sum_{i=1}^{N}\big[\, y_i \log \hat{p}_i + (1-y_i)\log(1-\hat{p}_i) \,\big]
+$$
+
+- One term survives per example: the loss asks **"how confident were you in the correct answer?"**
+
+<div style="text-align:center; font-size:0.75em;">
+
+| true $y_i$ | $\hat{p}_i$ | loss |
+|:--:|:--:|:--:|
+| 1 | 0.99 | 0.01 (great) |
+| 1 | 0.50 | 0.69 (unsure) |
+| 1 | 0.01 | 4.6 (confident **and** wrong) |
+
+</div>
+
+- In PyTorch: `nn.BCEWithLogitsLoss()` (fused sigmoid + BCE, keep the raw logit $z$).
+
+## 4.8 Evaluating a binary classifier: ROC and AUC {.smaller}
+- A **threshold** turns scores into 0/1 calls. Sweeping it from 1 to 0, compute $\text{TPR} = \tfrac{\text{TP}}{\text{TP} + \text{FN}}$ and $\text{FPR} = \tfrac{\text{FP}}{\text{FP} + \text{TN}}$ at each.
+- The **ROC curve** plots TPR vs. FPR; the **AUC** (area under it) sums it up in one number (0.5 = chance, 1.0 = perfect).
+- Code: `roc_curve`, `roc_auc_score` from `sklearn.metrics`.
+
+<div style="text-align:center;">
+![](assets/roc.svg){fig-align="center" width="34%"}
+</div>
 
 
 ::: {.center}
-# 4 Code {data-name="Code"}
+# 5 Where this goes next {data-name="Beyond"}
+Enrichment - not required for the project
 :::
 
-## Lenet (LeCun, 1998)
+## 5.1 Residual connections
+- Residual connections add the input back to the output, letting gradients flow more easily through very deep networks.
+<div style="text-align: center;">
+![](assets/residual.png){fig-align="center" width="75%"}
+</div>
+
+## 5.2 U-Net: segmentation {.smaller}
+- A CNN that outputs a label **per pixel** (segmentation), widely used in biomedical imaging.
+<div style="text-align: center;">
+![](assets/u-net-architecture.png){fig-align="center" width="58%"}
+</div>
+
+## 5.3 U-Net in biology: connectomics {.smaller}
+- Segmenting neurons in a full electron-microscopy volume of the **adult Drosophila brain**.
+<div style="text-align: center;">
+![](assets/unet-results.png){fig-align="center" width="70%"}
+</div>
+
+## 5.4 U-Net in biology: mitochondria {.smaller}
+- Binary segmentation of **mitochondria** from EM data (train, predict, visualize).
+<div style="text-align: center;">
+![](assets/hhmi_mito.png){fig-align="center" width="66%"}
+</div>
+
+[https://hpc.nih.gov/apps/unet.html](https://hpc.nih.gov/apps/unet.html)
+
+
+::: {.center}
+# 6 Code {data-name="Code"}
+:::
+
+## 6.1 LeNet (LeCun, 1998)
 <div style="text-align: center;">
 ![](assets/lenet.png){fig-align="center" width="80%"}
 </div>
@@ -367,7 +467,7 @@ class LeNet(nn.Module):
         )
         self.classifier = nn.Sequential(
             nn.Linear(16*5*5, 120),  # Why 16*5*5 ?
-            nn.ReLU(), 
+            nn.ReLU(),
             nn.Linear(120, 84), # (N, 120) -> (N, 84)
             nn.ReLU(),
             nn.Linear(84, 10)   # (N, 84)  -> (N, 10)
@@ -381,37 +481,9 @@ class LeNet(nn.Module):
 
 </div>
 
-## Lenet (LeCun, 1998)
-
-```{.python style="font-size: 1.2em;"}
-class LeNet(nn.Module):
-    def __init__(self, in_channels=3):
-        super().__init__()
-        self.feature_extractor = nn.Sequential(
-            nn.Conv2d(in_channels, out_channels=6, kernel_size=5),
-            nn.ReLU(),
-            nn.MaxPool2d(2),
-            nn.Conv2d(in_channels=6, out_channels=16, kernel_size=5),
-            nn.ReLU(),
-            nn.MaxPool2d(2),
-        )
-        self.classifier = nn.Sequential(
-            nn.Linear(16*5*5, 120),  # Why 16*5*5 ?
-            nn.ReLU(), 
-            nn.Linear(120, 84), # (N, 120) -> (N, 84)
-            nn.ReLU(),
-            nn.Linear(84, 10)   # (N, 84)  -> (N, 10)
-        )
-    def forward(self, x):
-        features = self.feature_extractor(x)
-        features = features.view(features.size(0), -1)
-        class_scores = self.classifier(features)
-        return class_scores
-```
-
-## Training Lenet (LeCun, 1998)
+## 6.2 Training LeNet (LeCun, 1998)
 - Almost a fully working code
-- Almost identical to the MLP code from the previous tutorial
+- Almost identical to the network code from the previous tutorial
 ```{.python style="font-size: 1.2em;" code-line-numbers="|2|3|4|5|6|7|8"}
 def train_lenet(model, data, loss_fn, optimizer, num_epochs=10):
     for epoch in range(num_epochs):
