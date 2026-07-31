@@ -10,7 +10,7 @@ format:
   jasa-html: default
 semester: Spring 2026
 submission-date: 12.07.26
-update-date: 28.06.26
+update-date: 29.06.26
 author:
   - name: Mattan Hoory
     acknowledgements: | 

@@ -1,20 +1,22 @@
 ---
-title: "00660121 - Medical Diagnostics Final Project: deep-learning models for predicting gene expression and RNA-protein binding sites"
+title: "00660121 - Medical Diagnostics Final Project: convolutional and transformer models for RNA-protein binding and nanopore basecalling"
 
 format:
   jasa-pdf:
     toc: true
-    keep-tex: true  
+    number-sections: true
+    keep-tex: true
     journal:
       blinded: false
-  jasa-html: default
-semester: Spring 2025
-submission-date: 7.9.25
-update-date: 17.8.25
+  jasa-html:
+    number-sections: true
+semester: Spring 2026
+submission-date: 09.09.26
+update-date: 29.07.26
 author:
   - name: Mattan Hoory
     acknowledgements: | 
-      Thanks to Prof. Roee Amit and the Technion Faculty of Biotechnology & Food Engineering for their support, and to the CS 236605 Deep Learning course staff, the authors of the original assignments, for inspiration and selected materials.
+      Thanks to Prof. Roee Amit and the Technion Faculty of Biotechnology & Food Engineering for their support, and to the CS 236605 Deep Learning course and the authors of the original assignments and works for inspiration and selected materials.
     affiliations:
       - name: Technion - Israel Institute of Technology
         department: Faculty of Biotechnology and Food Engineering
@@ -22,13 +24,14 @@ author:
 
 ## Aim of the assignment
 
-Multilayer Perceptrons (MLPs) and Convolutional Neural Networks (CNNs) are two landmark deep learning architectures. The goal of this assignment is to (1) understand how they work in practice, (2) apply them to problems in computational biology, and (3) learn about modern methodologies for implementing and training them.
+Convolutional Neural Networks (CNNs) and Transformers are two landmark deep learning architectures. The goal of this project is to (1) understand how they work in practice, (2) apply them to sequence data to solve problems in computational biology, and (3) learn about modern methodologies for implementing and training them.
 
-We’ll implement the core pieces of an MLP (linear layers, ReLU, loss, backpropagation) ourselves ([Task @sec-task1]). Then we’ll rebuild the same idea in PyTorch (a python library), letting it take over the math and use it to revisit the HW1 gene‑expression regression task ([Task @sec-task2]). Finally, we’ll step into sequence modeling: a CNN that predicts RNA‑binding protein (RBP) sites from sequence and explores learned motifs ([Task @sec-task3]).
+We start with sequence classification: a CNN that predicts whether an RNA-binding protein (RBP) binds a given sequence. We then use the trained model to find the sequence motifs it learned ([Task @sec-task-cnn]). Next we move to sequence-to-sequence modelling with the architecture behind modern language models: a Transformer that reads a noisy nanopore current signal and calls the DNA sequence behind it, a task known as *basecalling* ([Task @sec-task-tx]). The Transformer's core idea, self-attention, is the same one that powers language models, and we will see why it succeeds where a CNN cannot.
 
-In each task, we have provided you with a "skeleton" (Jupyter notebook). This code will act as a guide to help you get started and focus on the main concepts (instead of the code structure). Some parts are implemented and can be used as is, while others are left for you to complete.
+Both tasks build directly on how you built a network from layers in HW2. What is new is the architecture in each case, and what you can learn by looking inside a trained model to explain its behavior (known as explainability or [XAI](https://en.wikipedia.org/wiki/Explainable_artificial_intelligence)).
 
-{{< pagebreak >}}
+In each task we provide a "skeleton" (Jupyter notebook) to help you get started and focus on the main concepts instead of the code structure. Some parts are implemented and can be used as is, while others are left for you to complete and are marked with `# TODO-n` comments.
+
 
 ### Guidelines
 
@@ -37,65 +40,56 @@ In each task, we have provided you with a "skeleton" (Jupyter notebook). This co
 **Submission:** .ZIP file through Moodle, see @sec-submission.
 
 - *Steps* are marked *A., B., ...*. You should complete them in the provided Jupyter notebooks. Either by filling in the TODOs or by writing your own code. The completed notebooks should be included in your submission. You will not be evaluated on the code itself, but on the results you obtain and the report you write.
-  - The code for the tasks is provided in the `src/` folder, in the form of notebooks that contain specific instructions. You can edit and run them in VSCode, Jupyter Notebook, Google Colab, or Kaggle as described in HW0.
-- *Questions/Plots* are marked numerically *3.1.1, 3.1.2, ...*. These require you to answer the questions or use code to create the plots, and then include them in your report.
+  - Each notebook contains its own instructions, so read it alongside this document. You can edit and run the notebooks in VSCode, Jupyter Notebook, Google Colab, or Kaggle as described in HW0.
+- *Questions/Plots* are marked *Q1, Q2, ...*. These require you to answer the questions or use code to create the plots, and then include them in your report.
+
+### Resources
+
+All the code lives in the course repository. Get it with either:
+
+- **[Download all the code (ZIP)](https://github.com/mathoory/00660121-medical-diagnostics/archive/refs/heads/main.zip)**, then unzip it and open the notebooks in Jupyter or VSCode.
+- or clone it with `git clone https://github.com/mathoory/00660121-medical-diagnostics` (see HW0).
+
+The ZIP contains the whole course repository, which is the simplest way to always get the current version. If something is updated you can re-download it and copy over just the notebook you need.
+
+Inside, the notebooks for this project are under `homeworks/04 Final Project/src/`:
+
+| Notebook | What you will do in it |
+|----------|----------------------|
+| `task-1/task-1.ipynb` | Task 1 - train a CNN to recognise RNA sequences that bind the AGO2 protein, then look at what it learned. |
+| `task-2/task-2.ipynb` | Task 2 - build a Transformer that reads raw nanopore signal and calls the DNA bases behind it. |
+
+### Running on a GPU (read this before you start) {#sec-gpu}
+
+Both tasks in this project need a GPU. Deep learning is millions of matrix multiplications, which a GPU performs in parallel and finishes roughly 10-30x faster than a laptop CPU. On a CPU, one training epoch of Task 1 can take an hour instead of a few minutes.
+
+You have free GPU access on Google Colab and on Kaggle Kernels, and both give you a limited number of GPU hours per week, which is enough for this project if you plan your runs. See HW0 for how to get started on either.
+
+> Video walkthrough (from last year - different project, same method, watch from 1:23): [enabling a GPU on Google Colab](https://panoptotech.cloud.panopto.eu/Panopto/Pages/Viewer.aspx?id=c314b446-3967-43c0-aac9-b33c00d18668)
+
+**How to not waste your quota.** The GPU clock runs whether or not your code is correct, and most of the time you lose is spent on runs that crash three minutes in, or that you did not need in the first place.
+
+1. **Debug on CPU first, on a deliberately tiny problem.** In Task 1, load only a few hundred sequences and train for one epoch. In Task 2, drop `steps` to a few dozen. You are not looking for good accuracy here, only for code that runs end to end without errors.
+2. **Only then switch the runtime to GPU** and scale up to the full data and a realistic number of epochs.
+3. **Decide what each run is testing before you launch it.** Changing three hyper-parameters at once tells you nothing about which one mattered.
+4. **Save your results as you go** (metrics, plots), so a disconnected session does not cost you a rerun. Colab and Kaggle both disconnect idle sessions.
 
 
 {{< pagebreak >}}
 
 ## Tasks
 
-### Task 1 - Basic MLP {#sec-task1}
-In this task, you will implement a basic version of an MLP from scratch.
-
-*A.* Complete all `# TODO‑n` cells in `task-1.ipynb`. After each TODO, if it exists, run the test cell that checks your code and make sure the check passes.
-
-#### Theoretical questions
-Answer concisely (1-2 lines) in your PDF report:
-
-*2.1.1.1.* What is the purpose of the ReLU activation function?
-
-*2.1.1.2.* Is backpropagation **required** for training a neural network? Why or why not?
-
-*2.1.1.3.* What are the main components of the train loop? What is the purpose of each component? Does the order of these components matter? Why or why not?
-
-*2.1.1.4.* Explain the difference between gradient descent and back-propagation.
-
-*2.1.1.5.* How many parameters does your MLP have? (PyTorch version), how did you calculate/find it?
-
-{{< pagebreak >}}
-
-### Task 2 - Comparison of LR and MLP on the gene expression dataset {#sec-task2}
-In this task you will revisit the **mini-GEO gene-expression dataset** you used in HW1 and benchmark an MLP (Task 1) against an LR baseline (HW1). Refer to HW1 for the dataset description. Use the exact same CSV you used in HW1 (gene_expression_regression.csv). If you no longer have it locally, re‑download it from HW1.
-
-*A.* Read *2.3 D-GEX* from *[Chen et al., 2016](https://doi.org/10.1093/bioinformatics/btw074)* to understand how deep learning was used to infer gene expression from landmark genes. Remember, we are working with a mini version of the dataset, so the results and methods might differ.
-
-*B.* Linear-Regression baseline: Train a LR model to predict the target gene expression from the landmark genes. Calculate MSE and Pearson *r* on the test set (You may copy/paste your HW1 LR code or use `sklearn.linear_model.LinearRegression`) (TODO-1)
-
-*C.* Design and implement your MLP: Start from the baseline given in `task-2.ipynb` and work according to the `TODOs`. Now, each one might require a few lines to complete. Consider which [activation function](https://pytorch.org/docs/stable/nn.html#non-linear-activations) you would like to use, how many layers and neurons per layer, and whether you want to use [dropout](https://pytorch.org/docs/stable/nn.html#dropout).
-
-*D.* Train MLP: Implement the training loop (see `task-1.ipynb` for reference). (TODO2-5)
-
-*E.* Hyper-parameters: Train the MLP model with different **depth, width, learning-rate**. Use the **validation** set for selection. You may automate this or do a handful of manual runs (6-10).
-
-*2.2.1* For the multilayer perceptron (MLP), plot the training & validation set loss curves for different hyper-parameters. How did changing each hyper-parameter affect the curves? Report the best performing MLP hyper-parameters and the final model structure.
-
-*F.* Final evaluation & comparison: Retrain the chosen MLP on train + validation sets with the best hyper-parameters found, then evaluate LR and MLP on the **test set** and compare MSE and Pearson *r*.
-
-*2.2.2* Discuss and compare the results of the LR model and the MLP model (mention MSE, Pearson *r*, and number of parameters).
-
-{{< pagebreak >}}
-
-### Task 3 - CNN for RNA-protein binding sites {#sec-task3}
+### Task 1 - CNN for RNA-protein binding sites {#sec-task-cnn}
 
 #### Introduction
 
-RNA‑binding proteins ([**RBPs**](https://en.wikipedia.org/wiki/RNA-binding_protein)) regulate RNA after transcription. Cross-linking and immunoprecipitation followed by high-throughput sequencing ([**CLIP-Seq**](https://en.wikipedia.org/wiki/Cross-linking_immunoprecipitation)) captures short RNA fragments crosslinked to a specific RBP (here: AGO2). To try and pinpoint sequence patterns (motifs) that drive RBP recognition, we attempt to use computational analysis. Deep convolutional neural networks (CNNs) have proven especially powerful for this task: their filters can capture sequence motifs and higher-order dependencies.
+RNA-binding proteins ([RBPs](https://en.wikipedia.org/wiki/RNA-binding_protein)) regulate RNA after transcription. Cross-linking and immunoprecipitation followed by high-throughput sequencing ([CLIP-Seq](https://en.wikipedia.org/wiki/Cross-linking_immunoprecipitation)) captures short RNA fragments crosslinked to a specific RBP, here [AGO2](https://en.wikipedia.org/wiki/EIF2C2). To try and pinpoint sequence patterns (motifs) that drive RBP recognition (what sequence does AGO2 bind to?), we attempt to use computational analysis. Deep convolutional neural networks (CNNs) have proven useful for this task: their filters can capture sequence motifs and higher-order dependencies.
 
 In the following exercises you will:
 
 - Preprocess the data: convert raw CLIP-Seq reads into one-hot encoded sequences suitable for CNN input.
 - Build and train a CNN model in PyTorch to predict the binding probability of a given sequence to the AGO2 protein. $$f(\text{sequence})=P(\text{binding}|\text{sequence})$$
+  - For example: $f(\text{ACGUACGUACGU})=0.87$ means that the model predicts a probability of 0.87 that the sequence `ACGUACGUACGU` binds to AGO2.
 - Tune hyper-parameters and benchmark performance
 - Visualize binding motifs
 
@@ -104,37 +98,45 @@ You can download the dataset files from [here](https://technionmail.sharepoint.c
 
 | File | Purpose |
 | -- | -- |
-| `train.positives.fa` | Training positives |
-| `train.negatives.fa` | Training negatives |
-| `ls.positives.fa` |  Validation positives |
-| `ls.negatives.fa` |  Validation negatives |
+| `CLIPSEQ_AGO2.train.positives.fa` | Training positives |
+| `CLIPSEQ_AGO2.train.negatives.fa` | Training negatives |
+| `CLIPSEQ_AGO2.ls.positives.fa` |  Validation positives |
+| `CLIPSEQ_AGO2.ls.negatives.fa` |  Validation negatives |
+
+Unzip the archive and place the four `.fa` files in the same directory as the notebook, keeping these exact names. On Google Colab, upload them into the session (they are deleted when the session restarts). On Kaggle, add the linked dataset to your notebook. The archive also contains a `utils/` folder - you do not need it, `task-1.ipynb` is self-contained.
 
 **References:**  
 Pan, Xiaoyong, and Hong-Bin Shen. “Predicting RNA-protein binding sites and motifs through combining local and global deep convolutional neural networks.” Bioinformatics (Oxford, England) vol. 34,20 (2018): 3427-3436. [https://doi.org/10.1093/bioinformatics/bty364](https://doi.org/10.1093/bioinformatics/bty364)
 
-##### Using a GPU in this task
-Convolutional layers perform millions of matrix-multiply operations. GPUs execute these in parallel and finish **\~10-30 × faster** than a laptop CPU. Without a GPU, one training epoch can take an hour instead of a few minutes. You can access a free GPU on Google Colab or Kaggle Kernels. Both platforms provide a limited amount of GPU time per week, which is sufficient for this assignment (See HW0 for details). **Make sure you plan your runs to avoid exceeding the quota**: start with small datasets/single epochs without a GPU, then gradually increase the size and number of epochs and move to the GPU as you debug your code.
+##### Compute for this task
+This is the heavier of the two tasks: about 92,000 training sequences (plus 1,000 for validation), and you will train several architectures. Use a GPU (see @sec-gpu), and debug on a few hundred sequences for a single epoch before you scale up.
 
 
 #### Instructions
 
-*A.* Read the Introduction, and Materials and methods chapters (up until and including 2.4) from the publication to understand the context of the task at hand. In our case, we will only implement the global CNN described in section 2.2 as it suffices for our purposes.
+*A.* Read the Introduction and Materials and methods (up to and including 2.4) of the publication above (Pan & Shen, 2018). Their work is our inspiration rather than a specification: we build one global CNN of our own design and skip their local CNN and the ensemble. Section 2.4 is the basis for the motif part of this task. 
 
-*2.3.2.0.* Explain the role of the AGO2 protein
+*Q1* Explain the role of the AGO2 protein,
 
-*2.3.2.1.* Report number of positive and negative sequences in the train and validation sets. (No test set in this task, only train and validation)
+*Q2* How can CNN filters capture sequence motifs? What is the purpose of the convolutional layers, and how do they differ from fully connected ones? Once you have built your model, support your answer with its own numbers: how many parameters are in your first convolutional layer, and how many would a fully connected layer covering the same input need?
 
-*B.* Implement the CNN model in `task-3.ipynb` (TODO-1) and the validation loop (TODO-2).
+*Q3* Report number of positive and negative sequences in the train and validation sets.
 
-*C.* Train the model using different architectures and any hyper-parameters you find relevant. Remember, you are limited to the GPU time quota.
+*Note on splits:* this task has only two sets. Train only on the `train.*` files. The `ls.*` files are never trained on, and they play both roles that HW1 and HW2 split between a validation and a test set: you compare architectures by their `ls.*` score, and you also report your final numbers on `ls.*`. There is no third set here. Because you chose your architecture by looking at these sequences, your reported score is a mildly optimistic estimate of true performance, which is worth a sentence in your report.
 
-*2.3.2.2.* Plot the learning curves of the train set (loss vs epochs), and theorize how your architecture affected the learning process.
+*B.* Implement the CNN model in `task-1.ipynb` (TODO-1) and the validation loop (TODO-2).
 
-*D. * Model evaluation: In HW1 we have seen how TPR and FPR can be used to measure the performance of a binary classifier. In this task, we will use the **ROC curve** and **AUC** to evaluate our model. Here, we train a model that outputs a score (higher = more likely bound). To turn scores into 0/1 calls we pick a threshold. Different users may want high sensitivity or high specificity and may choose different thresholds accordingly.
+One fact about the shapes is worth knowing before you start, because it is about the data rather than about PyTorch. Your input is $(N, 1, 4, L)$, where the height is the four nucleotide rows. The first convolution spans all four of them at once, so after it the height is $1$ and stays $1$: from there on, every layer is working along the length of the sequence only.
 
-The **[Receiver Operating Characteristic (ROC) curve](https://developers.google.com/machine-learning/crash-course/classification/roc-and-auc)** shows how **sensitivity** (True Positive Rate, TPR) trades off against **1–specificity** (False Positive Rate, FPR) as you vary the decision threshold from 1.0 down to 0.0. 
+*C.* Train the model using different architectures and any hyper-parameters you find relevant. Remember, you are limited to the GPU time quota. The term architecture here refers to the model layers and their paramters. For example: number of convolutional layers, their kernel sizes, and the number of filters in each layer. You can also experiment with different learning rates, batch sizes, and optimizers.
 
-Reminder: Each **threshold** classifies examples based on their score.
+*Q4* Plot the learning curves on the train set (loss vs epochs), and theorize how your architecture affected the learning process.
+
+*D.* Model evaluation: In HW1 we have seen how TPR and FPR can be used to measure the performance of a binary classifier. In this task, we will use the ROC curve and AUC to evaluate our model. Here, we train a model that outputs a score (higher = more likely bound). To turn scores into 0/1 calls we pick a threshold. Different users may want high sensitivity or high specificity and may choose different thresholds accordingly.
+
+The [Receiver Operating Characteristic (ROC) curve](https://developers.google.com/machine-learning/crash-course/classification/roc-and-auc) shows how sensitivity (True Positive Rate, TPR) trades off against 1-specificity (False Positive Rate, FPR) as you vary the decision threshold from 1.0 down to 0.0. 
+
+Reminder: Each threshold classifies examples based on their score.
 
 $$\tilde y_{i,\text{binary}} = \begin{cases}
   1 & \text{if } \text{score} \ge \text{threshold}\\[2pt]
@@ -147,17 +149,41 @@ Because this threshold can be varied, we are interested in how the model perform
 * $\text{TPR} = \text{TP} / (\text{TP} + \text{FN})$  "of all real positives, how many did we catch?”
 * $\text{FPR} = \text{FP} / (\text{FP} + \text{TN})$  "of all real negatives, how many did we wrongly call positive?”
 
-The **Area Under the ROC Curve (AUC‑ROC)** is the area under the graph of TPR vs. FPR; and it is a single number that summarizes the model's performance.
+**A worked example.** Say we have 10 validation sequences, 5 that really bind (1) and 5 that do not (0), and the model gives each one a score:
 
-To calculate the AUC-ROC and plot the ROC curve, you can use the [`roc_curve`](https://scikit-learn.org/stable/modules/generated/sklearn.metrics.roc_curve.html) and [`roc_auc_score`](https://scikit-learn.org/stable/modules/generated/sklearn.metrics.roc_auc_score.html) functions from the **scikit-learn** library.
+| score | 0.95 | 0.88 | 0.71 | 0.63 | 0.55 | 0.44 | 0.31 | 0.22 | 0.14 | 0.05 |
+|-------|------|------|------|------|------|------|------|------|------|------|
+| true label | 1 | 1 | 0 | 1 | 1 | 0 | 1 | 0 | 0 | 0 |
 
-*2.3.2.3.* Final test metrics: report the best model's accuracy, plot the ROC curve and report the AUC on the validation set.
+Now sweep the threshold. Everything at or above it is called "binds", everything below is called "does not bind":
 
-*2.3.2.4.* Report the model's architecture: a short layer-by-layer description (shapes and total trainable parameters).
+| threshold | TP | FP | FN | TN | TPR | FPR |
+|-----------|----|----|----|----|-----|-----|
+| 0.90 (very strict) | 1 | 0 | 4 | 5 | 0.2 | 0.0 |
+| 0.60 | 3 | 1 | 2 | 4 | 0.6 | 0.2 |
+| 0.50 | 4 | 1 | 1 | 4 | 0.8 | 0.2 |
+| 0.20 (very permissive) | 5 | 3 | 0 | 2 | 1.0 | 0.6 |
+
+Read the pattern: lowering the threshold can only raise TPR and FPR together, never one alone. A strict threshold misses real binders (low TPR) but almost never raises a false alarm (low FPR). A permissive one catches every binder (TPR 1.0) at the cost of calling non-binders positive (FPR 0.6). Each row of that table is one point $(	ext{FPR}, 	ext{TPR})$ on the ROC curve, and the curve is what you get by sweeping the threshold continuously.
+
+**How to read the curve.** The x-axis is FPR (lower is better) and the y-axis is TPR (higher is better), so the ideal model hugs the top-left corner: it catches every real binder without a single false alarm. The diagonal from $(0,0)$ to $(1,1)$ is what random guessing looks like, so a curve sitting on the diagonal means the scores carry no information. The further your curve bows towards the top-left, the better the model.
+
+This gives us two things:
+
+* **Comparing models.** The Area Under the ROC Curve (AUC-ROC) is the area under that graph, a single number summarising performance across *all* thresholds. 0.5 is random guessing, 1.0 is perfect. Because it does not depend on any one threshold, it is a fair way to compare two architectures.
+* **Choosing a threshold.** The curve shows what each choice costs. A screening assay where missing a binder is expensive would pick a point high up the curve and accept the false alarms. An experiment where testing each candidate is expensive would pick a point far to the left and accept missing some binders.
+
+To calculate the AUC-ROC and plot the ROC curve, you can use the [`roc_curve`](https://scikit-learn.org/stable/modules/generated/sklearn.metrics.roc_curve.html) and [`roc_auc_score`](https://scikit-learn.org/stable/modules/generated/sklearn.metrics.roc_auc_score.html) functions from the scikit-learn library.
+
+*Q5* Final held-out metrics: for your best model, report the accuracy, plot the ROC curve, and report the AUC - all on the validation (`ls.*`) set.
+
+*Q6* Report the model's architecture: a short layer-by-layer description (shapes and total trainable parameters).
+
+{{< pagebreak >}}
 
 #### Interpretation: Motif Prediction
 
-In this part we want to discover sequence motifs: short, recurring nucleotide patterns that are statistically enriched in binding sites and thought to capture the base‑level preferences of an RBP. A motif can be represented as a Position Weight Matrix (PWM): for each position in the motif (say length 10), we sum how often A, C, G, or U occurs across many aligned instances and convert those counts to probabilities; tall columns in a logo mean strong base preference, flat columns mean weak ones. 
+Now that we have a model, we can predict for each sequence whether it binds or not, but we also want to know *why* it made that decision. That means, we would like to find out what sequence patterns the model learned to recognize as binding sites. This is known as *motif discovery*. [Sequence motifs](https://en.wikipedia.org/wiki/Sequence_motif) are short, recurring nucleotide patterns that are statistically enriched (more frequent) in binding sites and we will use them to capture the base-level preferences of an RBP. A motif can be represented as a Position Weight Mavtrix  - see example below): for each position in the motif (say length 10), we sum how often A, C, G, or U occurs across many aligned instances and convert those counts to probabilities. Tall columns in a logo mean strong base preference, flat columns mean weak ones. 
 
 $$
 \underbrace{
@@ -184,17 +210,194 @@ $$
 }_{\text{Sequence logo (motif)}}
 $$
 
-In full research pipelines, investigators usually locate motifs by opening up a trained convolutional neural network, inspecting its first‑layer filters (which act like motif detectors), scanning real biological sequences of variable length, collecting the highest activation windows per filter, and then building separate PWMs for each learned pattern before comparing them with motif from the literature (e.g., Ray2013) using tools like TOMTOM. That approach is powerful but technically heavy. For teaching we'll take a shortcut: we already have a trained RBP classifier (for AGO2). We will conduct an "experiment" to inspect what was learned by the model. We will generate many random fixed‑length synthetic RNA sequences, ask the model to score them, and then inspect the central bases of highly scoring sequences. We will then build a single PWM for each group and construct a sequence logo for each one.
+In full research pipelines, investigators locate motifs by opening up a trained convolutional neural network and inspecting its first-layer filters, which act like motif detectors. That is exactly what we will do here, and the procedure is short enough to write yourself.
 
-E. Complete the motif extraction pipeline in `task-3.ipynb` (TODO-3), and generate a sequence logo for the positive sequences (binding). You may use [https://weblogo.berkeley.edu/logo.cgi](https://weblogo.berkeley.edu/logo.cgi) to generate the sequence logo.
+The idea is that you do not need to read a filter's weights to find out what it looks for. You can watch it work. We will apply the first convolutional layer on positive (binding) examples from our dataset, and record the outputs. Wherever a filter produces a high value, it has met a pattern it "likes". We can then save all preferred patterns. We wll use those to create a PWM, and the PWM drawn as letters is the logo.
 
-*2.3.2.5.* Brief discussion ( < 100 words): interpret the model's results based on your findings.
+"Likes" needs a number attached to it. We use the same rule as the paper: for each filter we compute a **cutoff**, and any position where that filter's output is above its cutoff counts as a hit.
+
+$$\text{cutoff} \;=\; \text{mean} \;+\; 0.5 \times (\text{max} - \text{mean})$$
+
+The mean and the maximum are taken over that filter's output across all sequences and all positions, so the cutoff sits halfway between a filter's typical response and its strongest one, and each filter gets its own. There is nothing here for you to tune.
+
+**A worked example.** Take one filter of width $k = 4$. It sits on the sequence, reads the 4 bases under it, and returns one number. Then it slides along by one and does it again:
+
+$$
+\begin{array}{rlcl}
+ & \mathtt{G\;G\;A\;C\;G\;U\;A\;A} & & \\[4pt]
+\text{pos 1} & \mathtt{\underline{G\;G\;A\;C}\;G\;U\;A\;A} & \to & 0.0 \\
+\text{pos 2} & \mathtt{G\;\underline{G\;A\;C\;G}\;U\;A\;A} & \to & 0.1 \\
+\text{pos 3} & \mathtt{G\;G\;\underline{A\;C\;G\;U}\;A\;A} & \to & \mathbf{2.4} \\
+\text{pos 4} & \mathtt{G\;G\;A\;\underline{C\;G\;U\;A}\;A} & \to & 0.3 \\
+\text{pos 5} & \mathtt{G\;G\;A\;C\;\underline{G\;U\;A\;A}} & \to & 0.0
+\end{array}
+$$
+
+Five placements, so five numbers. Do the same for two more sequences:
+
+$$
+\begin{array}{c|c|ccccc}
+ & \text{sequence} & \text{pos }1 & \text{pos }2 & \text{pos }3 & \text{pos }4 & \text{pos }5\\\hline
+\text{seq }1 & \texttt{GGACGUAA} & 0.0 & 0.1 & \mathbf{2.4} & 0.3 & 0.0\\
+\text{seq }2 & \texttt{CCUUAGCA} & 0.2 & 0.0 & 0.1 & 0.0 & 0.1\\
+\text{seq }3 & \texttt{AUCGUACC} & 0.0 & \mathbf{1.9} & 0.4 & 0.0 & 0.0
+\end{array}
+$$
+
+There are 15 numbers in total. Their mean is $5.5 / 15 = 0.37$ and the largest is $2.4$, so
+
+$$\text{cutoff} = 0.37 + 0.5 \times (2.4 - 0.37) = 1.38 .$$
+
+Two of the 15 placements are above $1.38$: position 3 of sequence 1, and position 2 of sequence 3. Everything else is background. For each hit we take the $k = 4$ bases starting at that position:
+
+- seq 1, position 3 $\rightarrow$ `ACGU`
+- seq 3, position 2 $\rightarrow$ `UCGU`
+
+Those two strings are what we keep. Note they are **aligned**: both start where the filter fired, so their first letters correspond to each other, and we can stack them and count. With 4-mers from thousands of real sequences instead of two, counting the bases at each of the four positions gives the PWM, and the PWM drawn as letters is the logo.
+
+Your own sequences vary in length (most are 200-375 bases) and are padded out to $L = 501$ before they reach the network, so with a width-10 filter each one gives $501 - 10 + 1 = 492$ numbers. Windows falling in the padding are discarded, and a filter still usually fires on a few thousand real positions across the dataset.
+
+Each filter gives you one logo. Some will show a clear preference and others will look almost flat, which is itself informative: not every filter learns something worth reading.
+
+**In short:** apply the filter, keep the windows that score above the cutoff, count them into a PWM, draw the logo.
+
+*E.* **Read a motif off the model.** Complete the readout in `task-1.ipynb` (TODO-3) by assembling the provided helpers. Export a handful of filters, turn them into logos with [WebLogo](https://weblogo.threeplusone.com/create.cgi), and include two or three in your report. Expect some to come out flat: a filter that learned nothing is a result too.
+
+*Q7* Looking at your logos: what kind of sequence does your model prefer? Which filter did you take forward to the next step, and why? What is it about its picture that made you pick it? Any outliers?
+
+As we have seen in class, learned filters (weights) differ from model to model and are not always easily explainable. Your logos will not match your classmates' exactly, and that is expected. Usually these results are validated against known literature.
+
+*F.* **Test the motif.** A logo is a *claim* about what the model responds to, and so far nothing has tested it. In `task-1.ipynb` (TODO-4) you will put the claim to the model directly: score a batch of random sequences, then plant your motif into those same sequences and score them again, using several copy numbers so you get a **dose-response** curve. If the model really responds to the pattern, more copies should push the score up.
+
+The part that makes this an experiment rather than a demonstration is the **control**. A rise in score after planting a G/C-rich motif could mean the model responds to that specific pattern, or merely that it likes G/C-rich sequences. You have to build a comparison that separates those two explanations, run it alongside the real motif, and say in your report what you chose and why it isolates what you want.
+
+*Q8* Report your dose-response curve for the real motif and for your control, and state what control you used and why it isolates the pattern from its base composition. Does the model respond to the pattern, to its composition, or to neither?
 
 #### Theoretical questions
 
-*2.3.4.1.* What is the purpose of the convolutional layers in a CNN? How do they differ from fully connected layers?
 
-*2.3.4.2.* Can the fully connected layers in the model be of any size? Why or why not? What is the effect of the size of the fully connected layer on the model's performance?
+*Q9* Can the fully connected layers in the model be of any size? Why or why not? What is the effect of the size of the fully connected layer on the model's performance?
+
+{{< pagebreak >}}
+
+### Task 2 - Transformer for nanopore basecalling {#sec-task-tx}
+
+#### Introduction
+
+[Nanopore sequencing](https://en.wikipedia.org/wiki/Nanopore_sequencing) reads DNA by pulling a single strand through a tiny protein pore while measuring the ionic current across it. The few bases inside the pore at any moment set the current level, so a read comes out as a noisy one-dimensional time series called a *"squiggle"*. [Basecalling](https://en.wikipedia.org/wiki/Base_calling) is the inverse problem: turn the squiggle back into the DNA sequence `ACGT`. Modern basecallers do this with the Transformer, the same architecture that powers language models.
+
+This task is built as an investigation, and `task-2.ipynb` is written to be worked through **in order**. You will look at the data, build the model you already know from Task 1, find where it fails, work out why, and only then reach for a Transformer. The sections below give you the technical background you need. The notebook carries the argument.
+
+#### Background
+
+**Input and output.** One read is a stretch of DNA that was pulled through the pore. We fix the read at $T = 60$ bases, and the pore emits $D = 8$ current samples per base, so the raw signal is a vector of $60 \times 8 = 480$ numbers:
+
+$$
+s \;=\; [\,s_1,\, s_2,\, \ldots,\, s_{480}\,] \;\in\; \mathbb{R}^{480}
+\qquad\text{for example}\qquad
+s = [\,0.31,\, -1.20,\, 0.80,\, \ldots,\, 0.14\,]
+$$
+
+The first 8 numbers belong to base 1, the next 8 to base 2, and so on. What we want back is one letter per base:
+
+$$
+y \;=\; [\,y_1,\, y_2,\, \ldots,\, y_{60}\,], \qquad y_i \in \{\texttt{A}, \texttt{C}, \texttt{G}, \texttt{T}\}
+$$
+
+The model does not output letters directly. Exactly as in Task 1, it outputs **numbers** and we read the answer off them. Task 1 produced one number per sequence (bind or not). Here we need one of **four** choices at each of 60 positions, so the model outputs a grid of $60 \times 4$ scores, and the largest score in a row is that base's call:
+
+$$
+O \;=\;
+\begin{array}{c|cccc}
+ & \texttt{A} & \texttt{C} & \texttt{G} & \texttt{T} \\\hline
+\text{base } 1 & 2.7 & -0.4 & 0.1 & -1.2 \\
+\text{base } 2 & -0.9 & 0.2 & 3.1 & 0.0 \\
+\vdots & & & & \\
+\text{base } 60 & 0.3 & -1.1 & 0.4 & 2.2
+\end{array}
+\;\in\; \mathbb{R}^{60 \times 4}
+\qquad\Longrightarrow\qquad
+\hat{y} = \texttt{A}\,\texttt{G}\ldots\texttt{T}
+$$
+
+Row 1's largest entry is $2.7$ under `A`, so base 1 is called `A`. The loss function compares this grid with the true bases, and the notebook provides it, so you do not need to derive it.
+
+**Tokenization.** The 480 raw numbers are not a useful input on their own, because the model should reason about *bases*, not about individual current samples. So the first layer groups each base's 8 samples into a single vector of length $d$, called a **token**:
+
+$$
+\underbrace{s \in \mathbb{R}^{480}}_{\text{480 current samples}}
+\quad\longrightarrow\quad
+\underbrace{X \in \mathbb{R}^{T \times d}}_{\text{60 tokens, one per base}}
+$$
+
+so row $i$ of $X$, written $x_i \in \mathbb{R}^{d}$, is everything the model knows about base $i$. You choose $d$ (it is the `d_model` setting). This is done with a convolution of width 8 and stride 8, which is the Task 1 trick again: a filter that slides along the signal, here stepping a whole base at a time.
+
+Note the shapes: the input to the stack is $X \in \mathbb{R}^{T \times d}$ and the output is $O \in \mathbb{R}^{T \times 4}$. The number of rows never changes. Every layer in between transforms the $T$ tokens and hands back $T$ tokens.
+
+**Self-attention.** This is the mechanism from Tutorial 4. Each token $x_i$ produces a query, a key and a value, and the attention weight from token $i$ to token $j$ compares $i$'s query with $j$'s key, scaled by the key width $d_k$:
+
+$$
+a_{ij} = \operatorname{softmax}_j\!\left( \frac{q_i \cdot k_j}{\sqrt{d_k}} \right),
+\qquad
+z_i = \sum_{j=1}^{T} a_{ij}\, v_j .
+$$
+
+The sum runs over **every** token $j$, so base $i$ can pull in information from anywhere in the read, near or far.
+
+**Building the model.** To build the architecture you use the layers below, and you assemble them in the same way you assembled the CNN in Task 1: a list of layers, applied in order, each one handing its output to the next.
+
+$$
+\text{signal} \;\to\; [\text{Tokenizer}] \;\to\; +[\text{Positional encoding}] \;\to\; N\times[\text{Encoder block}] \;\to\; [\text{Head}] \;\to\; \texttt{ACGT}
+$$
+
+- **Tokenizer** - the convolution described above. Turns the 480 signal samples into $T$ tokens of width `d_model`.
+- **Positional encoding** - attention alone has no notion of order, so this adds a fixed position signature to each token. Just like in the tutorial, it is added to the tokens, not applied as a layer.
+- **Encoder block** - the part that does the thinking. Inside it, self-attention lets every token look at every other token, and then a small network is applied to each token on its own. It also does several other things that keep a deep stack trainable, which is why real implementations of this block are longer than you might expect. All of it is written for you: you create the block with a size and use it, and nothing inside it is yours to change or to understand for this project. You stack `n_layers` of them.
+- **Head** - a `Linear` layer that turns each token into its 4 scores, exactly like the final `Linear(..., 1)` that ended your CNN in Task 1, only with 4 outputs instead of 1.
+
+Your architecture decisions are the sizes: the token width `d_model`, the number of attention heads `n_heads`, how many encoder blocks `n_layers`, and the width `d_ff` of the small network inside each block.
+
+#### Instructions
+
+Work through `task-2.ipynb` in order. Each step below corresponds to one section of the notebook.
+
+*A.* Read the Background above and skim how [Dorado basecalls](https://nanoporetech.com/platform/technology/basecalling). Open `task-2/task-2.ipynb` and read the data generator in Section 1. It is the ground truth for everything that follows.
+
+*B.* **Look at the data** (Section 1). Plot a forward read next to a reverse read and compare them, drawing a few different reads.
+
+*C.* **Build the CNN** (Section 2, `TODO-1`). Start from the architecture you already know from Task 1 and train it. The `evaluate` function reports accuracy split by orientation, so read the two columns separately rather than the overall number.
+
+*D.* **Diagnose** (Section 3). Run the provided plot and work out what it is telling you.
+
+*E.* **Build the Transformer** (Section 4, `TODO-2` and `TODO-3`). Assemble it from the provided layers, pick your sizes, and train it on the *same* data.
+
+*F.* **Look inside it** (Section 5). Run the provided attention plot on a reverse read.
+
+*G.* **Ablation** (Section 6, `TODO-4`). Rebuild with `use_pe=False`, retrain, and compare.
+
+*H.* **Harder data, bigger models** (Section 7, `TODO-5`). Sweep `noise` for a couple of model sizes and plot accuracy against noise, then train in the graded regime.
+
+#### Questions
+
+*Q10* Compare a forward read with a reverse read: what differs between them? Then report your CNN's accuracy on each of the two orientations, and use the plot from step *D* to explain what defeats it. What property of a convolutional architecture is responsible, and why would adding more channels to the CNN not help?
+
+*Q11* Report your Transformer's accuracy on both orientations next to your CNN's. What changed, and what does that tell you about the difference between the two architectures?
+
+*Q12* From the attention plot, where does the queried base look? Relate this to your answer in *Q10*.
+
+*Q13* What happened to accuracy when you set `use_pe=False`? Explain using the fact that self-attention on its own is *permutation-invariant*, meaning it does not know the order of its tokens.
+
+*Q14* Report your best model's architecture (`d_model`, `n_heads`, `n_layers`, `d_ff`, and total parameter count) and how you chose it. Include your accuracy-vs-noise plot for at least two model sizes, and describe the trade-off you found.
+
+*Q15* In a short paragraph, relate self-attention here to its use in protein language models, which attend across amino-acid residues. Why is the ability to look across a whole sequence useful in biology?
+
+#### Model performance (competitive factor)
+
+Part of the grade rewards accuracy in a fixed, harder data regime we set for grading (`noise=0.4, hetero=0.6, dwell_jitter=0.15`), evaluated on held-out reads. In this regime the data is genuinely difficult, so model choices matter. Aim for a model that is both accurate and light enough to train within the free-GPU quota. Report your final held-out accuracy.
+
+#### Compute for this task
+
+Lighter than Task 1: the models are small and a full training run takes a few minutes on a free Colab or Kaggle GPU (see @sec-gpu). The catch is that you will do *many* runs here, since the experiments in step *E.* sweep both the data sliders and the model sizes. Plan which runs you actually need, and debug with `steps` cut to a few dozen before launching a full sweep.
 
 {{< pagebreak >}}
 
@@ -204,24 +407,26 @@ Submit a single ZIP file with the following structure:
 ```
 final_project_ID1_ID2.zip
 ├── src/                 # your code files
-│   ├── task-1.ipynb     # Task 1: Barebone MLP
-│   ├── task-2.ipynb     # Task 2: Compare LR and MLP
-│   ├── task-3.ipynb     # Task 3: CNN for RNA-protein binding sites
+│   ├── task-1.ipynb     # Task 1: CNN for RNA-protein binding sites
+│   ├── task-2.ipynb     # Task 2: Transformer for nanopore basecalling
 │   ├── any other code files for reproducibility...
-└── report_ID1_ID2.pdf   # < 4 pages + charts 
+├── llm_chats/           # exported LLM conversations (see note below)
+└── report_ID1_ID2.pdf   # < 4 pages + charts
 ```
 
-**Do not include** any data files in the submission, as they are very large and already available for download.
+Do not include any data files in the submission, as they are very large and already available for download.
+
+**LLM chat logs.** As in HW1 and HW2: if you used LLMs (e.g. ChatGPT, Claude, Gemini, Copilot) at any stage, export the full conversation(s) into `llm_chats/` (PDF, Markdown, or a `.txt` with shareable links).
 
 ### Written report guidelines
-The report should be a **concise** summary of your work, it should show your understanding of the model, results and reasoning behind your decisions. No need to include code, any equations or algorithms used should be mentioned if we saw them in class or explained otherwise.
+The report should be a concise summary of your work, it should show your understanding of the model, results and reasoning behind your decisions. No need to include code, any equations or algorithms used should be mentioned if we saw them in class or explained otherwise.
 
 - **Content**: 
   - Include your names and IDs on the first page
   - Include answers and results of all parts in the report.
   - Include all plots and figures that help explain your results.
   - Use clear markers for each task and question.
-- **Length**: Maximum **4** pages (excluding charts and figures, equations count towards length).
+- **Length**: Maximum 4 pages (excluding charts and figures, equations count towards length).
 - **Font**: Readable (e.g., Arial) with a minimum size of 11pt and standard margins.
 - **Explanations**: Provide clear, short explanations for your model choices, esp. if they diverge from what we've seen in class. Include any challenges you faced and how you solved them.
 - **Charts**: Include relevant figures, make sure they are clear and labeled, and provide a brief explanation of how it relates to your results.
@@ -238,8 +443,8 @@ The report should be a **concise** summary of your work, it should show your und
 
 
 ### Academic integrity & help
-* Use any online docs or LLMs, **do not share code or prompts** across pairs.
-* Post questions in the **Final project Moodle forum**. Emails regarding the project **will not be answered**. For Private issues email the TA.
+* Use any online docs or LLMs, do not share code or prompts across pairs.
+* Post questions in the Final project Moodle forum. Emails regarding the project will not be answered. For Private issues email the TA.
 
 Good luck!
 
@@ -249,10 +454,10 @@ Q: Can I use Kaggle/Collab?
 A: You may use any platform for development, but your final submission should follow the required folder structure and include files as specified.
 
 Q: What libraries can I use?
-A: For @sec-task1, you are allowed to use NumPy alone. For the other sections, you may use any library, but you cannot use any pre-built models. 
+A: You may use any library, but you cannot use any pre-built models - in particular, assemble the Transformer from the provided building blocks rather than using `torch.nn.Transformer`.
 
 Q: Do I need a GPU to run this assignment?
-A: Using a GPU will **significantly** speed up training times, especially for @sec-task3. You should use the free GPUs available on platforms like Google Colab or Kaggle.
+A: Using a GPU will significantly speed up training times for both tasks. You should use the free GPUs available on platforms like Google Colab or Kaggle.
 
 Q: What language may I use for the report and code?
 A: Report: English recommended, Hebrew accepted. Code: any language, but Python is recommended for compatibility with the provided code.
