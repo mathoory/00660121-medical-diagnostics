@@ -206,7 +206,7 @@ $$
 }_{\text{PWM}}
 \;\Longrightarrow\;
 \underbrace{
-\mbox{\raisebox{-0.5\height}{\includegraphics[height=3em]{assets/filepwd3na.png}}}
+\mbox{\raisebox{-0.5\height}{\includegraphics[height=3em]{assets/pwm-logo-example.png}}}
 }_{\text{Sequence logo (motif)}}
 $$
 
