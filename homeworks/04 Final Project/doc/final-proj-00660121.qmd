@@ -12,7 +12,7 @@ format:
     number-sections: true
 semester: Spring 2026
 submission-date: 09.09.26
-update-date: 29.07.26
+update-date: 31.07.26
 author:
   - name: Mattan Hoory
     acknowledgements: | 
@@ -128,7 +128,7 @@ This is the heavier of the two tasks: about 92,000 training sequences (plus 1,00
 
 One fact about the shapes is worth knowing before you start, because it is about the data rather than about PyTorch. Your input is $(N, 1, 4, L)$, where the height is the four nucleotide rows. The first convolution spans all four of them at once, so after it the height is $1$ and stays $1$: from there on, every layer is working along the length of the sequence only.
 
-*C.* Train the model using different architectures and any hyper-parameters you find relevant. Remember, you are limited to the GPU time quota. The term architecture here refers to the model layers and their paramters. For example: number of convolutional layers, their kernel sizes, and the number of filters in each layer. You can also experiment with different learning rates, batch sizes, and optimizers.
+*C.* Train the model using different architectures and any hyper-parameters you find relevant. Remember, you are limited to the GPU time quota. The term architecture here refers to the model layers and their parameters. For example: number of convolutional layers, their kernel sizes, and the number of filters in each layer. You can also experiment with different learning rates, batch sizes, and optimizers.
 
 *Q4* Plot the learning curves on the train set (loss vs epochs), and theorize how your architecture affected the learning process.
 
@@ -164,7 +164,7 @@ Now sweep the threshold. Everything at or above it is called "binds", everything
 | 0.50 | 4 | 1 | 1 | 4 | 0.8 | 0.2 |
 | 0.20 (very permissive) | 5 | 3 | 0 | 2 | 1.0 | 0.6 |
 
-Read the pattern: lowering the threshold can only raise TPR and FPR together, never one alone. A strict threshold misses real binders (low TPR) but almost never raises a false alarm (low FPR). A permissive one catches every binder (TPR 1.0) at the cost of calling non-binders positive (FPR 0.6). Each row of that table is one point $(	ext{FPR}, 	ext{TPR})$ on the ROC curve, and the curve is what you get by sweeping the threshold continuously.
+Read the pattern: lowering the threshold can only raise TPR and FPR together, never one alone. A strict threshold misses real binders (low TPR) but almost never raises a false alarm (low FPR). A permissive one catches every binder (TPR 1.0) at the cost of calling non-binders positive (FPR 0.6). Each row of that table is one point $(\text{FPR}, \text{TPR})$ on the ROC curve, and the curve is what you get by sweeping the threshold continuously.
 
 **How to read the curve.** The x-axis is FPR (lower is better) and the y-axis is TPR (higher is better), so the ideal model hugs the top-left corner: it catches every real binder without a single false alarm. The diagonal from $(0,0)$ to $(1,1)$ is what random guessing looks like, so a curve sitting on the diagonal means the scores carry no information. The further your curve bows towards the top-left, the better the model.
 
@@ -183,7 +183,7 @@ To calculate the AUC-ROC and plot the ROC curve, you can use the [`roc_curve`](h
 
 #### Interpretation: Motif Prediction
 
-Now that we have a model, we can predict for each sequence whether it binds or not, but we also want to know *why* it made that decision. That means, we would like to find out what sequence patterns the model learned to recognize as binding sites. This is known as *motif discovery*. [Sequence motifs](https://en.wikipedia.org/wiki/Sequence_motif) are short, recurring nucleotide patterns that are statistically enriched (more frequent) in binding sites and we will use them to capture the base-level preferences of an RBP. A motif can be represented as a Position Weight Mavtrix  - see example below): for each position in the motif (say length 10), we sum how often A, C, G, or U occurs across many aligned instances and convert those counts to probabilities. Tall columns in a logo mean strong base preference, flat columns mean weak ones. 
+Now that we have a model, we can predict for each sequence whether it binds or not, but we also want to know *why* it made that decision. That means, we would like to find out what sequence patterns the model learned to recognize as binding sites. This is known as *motif discovery*. [Sequence motifs](https://en.wikipedia.org/wiki/Sequence_motif) are short, recurring nucleotide patterns that are statistically enriched (more frequent) in binding sites and we will use them to capture the base-level preferences of an RBP. A motif can be represented as a Position Weight Matrix (PWM) - see example below: for each position in the motif (say length 10), we sum how often A, C, G, or U occurs across many aligned instances and convert those counts to probabilities. Tall columns in a logo mean strong base preference, flat columns mean weak ones. 
 
 $$
 \underbrace{
@@ -273,6 +273,12 @@ The part that makes this an experiment rather than a demonstration is the **cont
 
 *Q8* Report your dose-response curve for the real motif and for your control, and state what control you used and why it isolates the pattern from its base composition. Does the model respond to the pattern, to its composition, or to neither?
 
+#### Two notes on Section 6
+
+**Attention weights are not proof of use.** A bright pattern shows where attention weight went, not that the model used what it found there. Information also travels through the residual connections, and the prediction is read off the last block rather than the one you plot. Whether attention weights count as an explanation at all is an open argument in the literature (Jain and Wallace, 2019; Wiegreffe and Pinter, 2019). This is why the ablation in step *E* carries more weight than the picture in step *F*: breaking something and watching accuracy fall is evidence of a different kind.
+
+**The orientation rule is a teaching device.** A real basecaller reports whatever strand went through the pore and never complements anything, because matching a read to the right strand of a reference genome happens later, during alignment. We folded that step into the model so the task would contain one long-range dependency you can see and study. The mirroring is real bookkeeping. The adapter that flags which reads need it is our invention.
+
 #### Theoretical questions
 
 
@@ -284,27 +290,115 @@ The part that makes this an experiment rather than a demonstration is the **cont
 
 #### Introduction
 
-[Nanopore sequencing](https://en.wikipedia.org/wiki/Nanopore_sequencing) reads DNA by pulling a single strand through a tiny protein pore while measuring the ionic current across it. The few bases inside the pore at any moment set the current level, so a read comes out as a noisy one-dimensional time series called a *"squiggle"*. [Basecalling](https://en.wikipedia.org/wiki/Base_calling) is the inverse problem: turn the squiggle back into the DNA sequence `ACGT`. Modern basecallers do this with the Transformer, the same architecture that powers language models.
+[Nanopore sequencing](https://en.wikipedia.org/wiki/Nanopore_sequencing) reads DNA by pulling a single strand through a protein pore and measuring the ionic current across it. The bases inside the pore set the current, so a read arrives as a noisy one-dimensional signal called a *squiggle*:
 
-This task is built as an investigation, and `task-2.ipynb` is written to be worked through **in order**. You will look at the data, build the model you already know from Task 1, find where it fails, work out why, and only then reach for a Transformer. The sections below give you the technical background you need. The notebook carries the argument.
+![A squiggle from a 12-base strand. The red line is the current each group of bases in the pore produces, the blue line is what actually gets measured.](assets/squiggle-example.png){#fig-squiggle width=100%}
 
-#### Background
+[Basecalling](https://en.wikipedia.org/wiki/Base_calling) is the inverse problem: recover the sequence from the squiggle. In @fig-squiggle you can read the answer off the picture because the bases are printed underneath. Your model gets only the blue line. Production basecallers, such as Oxford Nanopore's [Dorado](https://nanoporetech.com/platform/technology/basecalling), do this with a Transformer.
 
-**Input and output.** One read is a stretch of DNA that was pulled through the pore. We fix the read at $T = 60$ bases, and the pore emits $D = 8$ current samples per base, so the raw signal is a vector of $60 \times 8 = 480$ numbers:
+You will build one. The function you are modelling is
+
+$$f(\text{squiggle}) = \texttt{ACGT}\ldots$$
+
+one letter for every base that went through the pore.
+
+Work `task-2.ipynb` in order. You will build the CNN you already know from Task 1 before you build anything new, because where it breaks is the reason the Transformer exists.
+
+#### The data
+
+You will not download anything for this task. You will *generate* your reads.
+
+In Task 1 you were handed files of real RNA sequences, with labels somebody else had
+established in a lab. Here you start from the opposite end. You draw a random strand of DNA,
+simulate the current a pore would measure as that strand passed through it, and hand the
+model that simulated current. Because you invented the strand in the first place you already
+know every base of the answer, so the label is exact and free. People who build real basecallers train them this way too,
+because the physics of the pore is understood well enough to imitate convincingly.
+
+A fresh batch is drawn at every training step, so your model never sees the same read twice and there is nothing to hold out: no
+train, validation and test split. And `evaluate` draws its reads from a fixed seed, so any
+two models you train are scored on exactly the same reads, as is every submission at grading
+time.
+
+Two settings control how degraded the reads are, and you will use them in step *D*:
+
+- `noise`, the strength of the noise on the current.
+- `hetero`, which makes the noise level vary along the read.
+
+##### The pore model
+
+Three bases sit in the pore at once and all three affect the current. Every possible 3-mer
+has its own characteristic level, and that table of $4^3 = 64$ numbers is the *pore model*.
+A few entries from ours:
+
+```
+AAA  +0.30        ACG  +0.13        GTA  +0.12
+AAC  -1.04        CGT  +0.37        TAC  +0.07
+```
+
+The strand ratchets through one base at a time, so the pore holds a different 3-mer at every
+step. Reading the strand `ACGTAC`, the pore sees a sliding window:
+
+```
+strand       A C G T A C
+
+pore holds   A C G                ->  +0.13
+               C G T              ->  +0.37
+                 G T A            ->  +0.12
+                   T A C          ->  +0.07
+```
+
+One step gives one level, so a 60-base read gives 60 levels. Each level is held for 8
+samples while the strand pauses there, and Gaussian noise is added on top. A read therefore
+arrives as $60 \times 8 = 480$ numbers.
+
+That is exactly @fig-squiggle: the red line is those levels, the blue line is the same thing after noise, and each flat stretch is one step of the ratchet.
+
+Notice what this costs you: a base cannot be identified on its own, because the level at
+each step depends on the two bases before it as well.
+
+##### The two strands, and the adapter
+
+DNA is double-stranded and antiparallel. The pore reads whichever strand it happens to
+capture, 5' to 3'. Capture the forward strand and the pore reads the forward sequence.
+Capture its partner and the pore reads the *reverse complement*: every base swapped for its
+pair (A-T, C-G), in the opposite order.
+
+We always want the forward strand reported, whichever one was captured:
 
 $$
-s \;=\; [\,s_1,\, s_2,\, \ldots,\, s_{480}\,] \;\in\; \mathbb{R}^{480}
-\qquad\text{for example}\qquad
-s = [\,0.31,\, -1.20,\, 0.80,\, \ldots,\, 0.14\,]
+f(\text{squiggle from } \texttt{ACGTAC}) = \texttt{ACGTAC}
+\qquad
+f(\text{squiggle from } \texttt{GTACGT}) = \texttt{ACGTAC}
 $$
 
-The first 8 numbers belong to base 1, the next 8 to base 2, and so on. What we want back is one letter per base:
+Those are two different squiggles, built from different 3-mers, and $f$ has to return the
+same answer for both:
 
-$$
-y \;=\; [\,y_1,\, y_2,\, \ldots,\, y_{60}\,], \qquad y_i \in \{\texttt{A}, \texttt{C}, \texttt{G}, \texttt{T}\}
-$$
+```
+forward strand      A C G T A C     this is always the answer
 
-The model does not output letters directly. Exactly as in Task 1, it outputs **numbers** and we read the answer off them. Task 1 produced one number per sequence (bind or not). Here we need one of **four** choices at each of 60 positions, so the model outputs a grid of $60 \times 4$ scores, and the largest score in a row is that base's call:
+forward capture     A C G T A C     the pore reads the answer directly
+reverse capture     G T A C G T     the answer is this, complemented and reversed
+```
+
+So on a reverse capture the first base of the answer is set by current measured at the *end*
+of the read, and the last base by current measured at the start.
+
+This split is how real sequencing works. A basecaller writes down whatever passed through the
+pore, and the *aligner* decides afterwards which strand it came from and flips it if needed.
+Here a single model does both jobs.
+
+Which leaves the model a problem. Two random strands are statistically identical, so nothing
+in the current levels says which of the two cases it is looking at, and without knowing that
+it cannot know whether to reverse anything. Real reads carry a sequencing **adapter**, a
+known stretch ligated on before sequencing that passes through the pore ahead of the DNA. In
+our generator, reverse captures carry a leftover adapter signal at the very start of the read
+and forward captures do not. That one feature is the only thing separating them.
+
+#### What the model outputs
+
+As in Task 1, the model produces numbers rather than letters. Task 1 gave one number per sequence. Here we need one of four choices at each of 60 positions, so the output is a $60 \times 4$ grid of scores, and the largest entry in each row is that base's call:
 
 $$
 O \;=\;
@@ -320,21 +414,25 @@ O \;=\;
 \hat{y} = \texttt{A}\,\texttt{G}\ldots\texttt{T}
 $$
 
-Row 1's largest entry is $2.7$ under `A`, so base 1 is called `A`. The loss function compares this grid with the true bases, and the notebook provides it, so you do not need to derive it.
+Row 1's largest entry is $2.7$ under `A`, so base 1 is called `A`. The loss function compares this grid with the true bases, and the notebook provides it.
 
-**Tokenization.** The 480 raw numbers are not a useful input on their own, because the model should reason about *bases*, not about individual current samples. So the first layer groups each base's 8 samples into a single vector of length $d$, called a **token**:
+#### Tokenization
+
+The 480 raw samples are not a useful input on their own. The first layer groups each step's 8 samples into a single vector of width $d$, called a **token**, giving 60 tokens per read:
 
 $$
 \underbrace{s \in \mathbb{R}^{480}}_{\text{480 current samples}}
 \quad\longrightarrow\quad
-\underbrace{X \in \mathbb{R}^{T \times d}}_{\text{60 tokens, one per base}}
+\underbrace{X \in \mathbb{R}^{T \times d}}_{T = 60 \text{ tokens}}
 $$
 
-so row $i$ of $X$, written $x_i \in \mathbb{R}^{d}$, is everything the model knows about base $i$. You choose $d$ (it is the `d_model` setting). This is done with a convolution of width 8 and stride 8, which is the Task 1 trick again: a filter that slides along the signal, here stepping a whole base at a time.
+One token holds everything the model knows about one step of the ratchet. You choose $d$, which is the `d_model` setting. The layer is a convolution of width 8 and stride 8, the Task 1 trick again, here stepping one base at a time.
 
-Note the shapes: the input to the stack is $X \in \mathbb{R}^{T \times d}$ and the output is $O \in \mathbb{R}^{T \times 4}$. The number of rows never changes. Every layer in between transforms the $T$ tokens and hands back $T$ tokens.
+The stack takes $T$ tokens and returns $T$ tokens. Only the width changes, and the head turns each token into its 4 scores.
 
-**Self-attention.** This is the mechanism from Tutorial 4. Each token $x_i$ produces a query, a key and a value, and the attention weight from token $i$ to token $j$ compares $i$'s query with $j$'s key, scaled by the key width $d_k$:
+#### Self-attention
+
+This is the mechanism from Tutorial 4. Each token $x_i$ produces a query, a key and a value, and the attention weight from token $i$ to token $j$ compares $i$'s query with $j$'s key, scaled by the key width $d_k$:
 
 $$
 a_{ij} = \operatorname{softmax}_j\!\left( \frac{q_i \cdot k_j}{\sqrt{d_k}} \right),
@@ -342,62 +440,71 @@ a_{ij} = \operatorname{softmax}_j\!\left( \frac{q_i \cdot k_j}{\sqrt{d_k}} \righ
 z_i = \sum_{j=1}^{T} a_{ij}\, v_j .
 $$
 
-The sum runs over **every** token $j$, so base $i$ can pull in information from anywhere in the read, near or far.
+The sum runs over every token $j$, so any token can draw on any other, near or far.
 
-**Building the model.** To build the architecture you use the layers below, and you assemble them in the same way you assembled the CNN in Task 1: a list of layers, applied in order, each one handing its output to the next.
+#### Building the model
+
+You assemble the architecture the same way you assembled the CNN in Task 1, as a list of layers applied in order:
 
 $$
 \text{signal} \;\to\; [\text{Tokenizer}] \;\to\; +[\text{Positional encoding}] \;\to\; N\times[\text{Encoder block}] \;\to\; [\text{Head}] \;\to\; \texttt{ACGT}
 $$
 
-- **Tokenizer** - the convolution described above. Turns the 480 signal samples into $T$ tokens of width `d_model`.
-- **Positional encoding** - attention alone has no notion of order, so this adds a fixed position signature to each token. Just like in the tutorial, it is added to the tokens, not applied as a layer.
-- **Encoder block** - the part that does the thinking. Inside it, self-attention lets every token look at every other token, and then a small network is applied to each token on its own. It also does several other things that keep a deep stack trainable, which is why real implementations of this block are longer than you might expect. All of it is written for you: you create the block with a size and use it, and nothing inside it is yours to change or to understand for this project. You stack `n_layers` of them.
-- **Head** - a `Linear` layer that turns each token into its 4 scores, exactly like the final `Linear(..., 1)` that ended your CNN in Task 1, only with 4 outputs instead of 1.
+- **Tokenizer**: the convolution above. Turns the 480 samples into $T$ tokens of width `d_model`.
+- **Positional encoding**: attention alone has no notion of order, so a fixed position signature is added to each token. As in the tutorial it is added to the tokens, not applied as a layer.
+- **Encoder block**: self-attention followed by a small per-token network, plus several things that keep a deep stack trainable. It is written for you and nothing inside it is yours to change, though you will look at one part of it in Section 6. You stack `n_layers` of them.
+- **Head**: a `Linear` layer turning each token into its 4 scores, like the `Linear(..., 1)` that ended your CNN in Task 1, with 4 outputs instead of 1.
 
-Your architecture decisions are the sizes: the token width `d_model`, the number of attention heads `n_heads`, how many encoder blocks `n_layers`, and the width `d_ff` of the small network inside each block.
+Your architecture decisions are four sizes:
+
+| setting | what it controls |
+|---|---|
+| `d_model` | the width of a token. Every token carries this many numbers, from the tokenizer all the way to the head. |
+| `n_layers` | how many encoder blocks you stack, one feeding into the next. |
+| `n_heads` | how many attention patterns each block computes side by side, the *heads* from Tutorial 4. They divide `d_model` between them, so `d_model` must be a multiple of `n_heads`. |
+| `d_ff` | the width of the small per-token network inside each block. It is normally a small multiple of `d_model`. |
+
+Nothing tells you what the right values are. Finding out is step *D*.
 
 #### Instructions
 
-Work through `task-2.ipynb` in order. Each step below corresponds to one section of the notebook.
+Work through `task-2.ipynb` in order. Each step corresponds to one section of the notebook.
 
-*A.* Read the Background above and skim how [Dorado basecalls](https://nanoporetech.com/platform/technology/basecalling). Open `task-2/task-2.ipynb` and read the data generator in Section 1. It is the ground truth for everything that follows.
+*A.* **Look at the data** (Section 1). Read the generator and plot a few reads of each kind.
 
-*B.* **Look at the data** (Section 1). Plot a forward read next to a reverse read and compare them, drawing a few different reads.
+*Q10* What separates a forward capture from a reverse one in the signal? And on a reverse capture, which part of the signal determines the first base you have to report?
 
-*C.* **Build the CNN** (Section 2, `TODO-1`). Start from the architecture you already know from Task 1 and train it. The `evaluate` function reports accuracy split by orientation, so read the two columns separately rather than the overall number.
+*B.* **Build the CNN** (Section 2, `TODO-1`) and train it. `evaluate` reports overall accuracy and the two orientations separately.
 
-*D.* **Diagnose** (Section 3). Run the provided plot and work out what it is telling you.
+*Q11* Report your CNN's accuracy overall and on each orientation, and explain the result. What property of a convolutional architecture is responsible, and would adding more filters help?
 
-*E.* **Build the Transformer** (Section 4, `TODO-2` and `TODO-3`). Assemble it from the provided layers, pick your sizes, and train it on the *same* data.
+*C.* **Build the Transformer** (Section 3, `TODO-2` and `TODO-3`). Assemble it from the provided layers, choose your sizes, and train it on the same data. Note the parameter counts that `train` prints, since the two models are deliberately close in size.
 
-*F.* **Look inside it** (Section 5). Run the provided attention plot on a reverse read.
+*Q12* Report your Transformer's accuracy next to your CNN's. What changed, and what does that tell you about the two architectures?
 
-*G.* **Ablation** (Section 6, `TODO-4`). Rebuild with `use_pe=False`, retrain, and compare.
+*D.* **Choose an architecture** (Section 4, `TODO-4`). Vary the model sizes and the data settings, and keep the runs you need to justify a choice. Then train your chosen model in the graded regime, `noise=0.5, hetero=0.6`.
 
-*H.* **Harder data, bigger models** (Section 7, `TODO-5`). Sweep `noise` for a couple of model sizes and plot accuracy against noise, then train in the graded regime.
+*Q13* Report your final architecture (`d_model`, `n_heads`, `n_layers`, `d_ff`, and total parameters) and justify it with your plots, including accuracy against noise for at least two model sizes.
 
-#### Questions
+*E.* **Ablation** (Section 5, `TODO-5`). Predict what removing the positional encoding will do to each orientation, then rebuild with `use_pe=False`, keeping every other size fixed, and retrain.
 
-*Q10* Compare a forward read with a reverse read: what differs between them? Then report your CNN's accuracy on each of the two orientations, and use the plot from step *D* to explain what defeats it. What property of a convolutional architecture is responsible, and why would adding more channels to the CNN not help?
+*Q14* State the prediction you made, report both orientations with and without the positional encoding, and explain the difference.
 
-*Q11* Report your Transformer's accuracy on both orientations next to your CNN's. What changed, and what does that tell you about the difference between the two architectures?
+*F.* **Look inside it** (Section 6). Run the attention plot on a reverse capture and work out which head is doing which job.
 
-*Q12* From the attention plot, where does the queried base look? Relate this to your answer in *Q10*.
+*Q15* Which head in your model is doing what, and what gave each one away? Relate this to your answer in *Q11*. Does a large attention weight prove the model used the position it points at? Say what evidence would settle it.
 
-*Q13* What happened to accuracy when you set `use_pe=False`? Explain using the fact that self-attention on its own is *permutation-invariant*, meaning it does not know the order of its tokens.
+#### Theoretical question
 
-*Q14* Report your best model's architecture (`d_model`, `n_heads`, `n_layers`, `d_ff`, and total parameter count) and how you chose it. Include your accuracy-vs-noise plot for at least two model sizes, and describe the trade-off you found.
-
-*Q15* In a short paragraph, relate self-attention here to its use in protein language models, which attend across amino-acid residues. Why is the ability to look across a whole sequence useful in biology?
+*Q16* In a short paragraph, relate self-attention here to its use in protein language models, which attend across amino-acid residues. Why is the ability to look across a whole sequence useful in biology?
 
 #### Model performance (competitive factor)
 
-Part of the grade rewards accuracy in a fixed, harder data regime we set for grading (`noise=0.4, hetero=0.6, dwell_jitter=0.15`), evaluated on held-out reads. In this regime the data is genuinely difficult, so model choices matter. Aim for a model that is both accurate and light enough to train within the free-GPU quota. Report your final held-out accuracy.
+Part of the grade rewards accuracy in a fixed, harder regime (`noise=0.5, hetero=0.6`). Because `evaluate` draws from a fixed seed, every submission is scored on identical reads. Report your final accuracy.
 
 #### Compute for this task
 
-Lighter than Task 1: the models are small and a full training run takes a few minutes on a free Colab or Kaggle GPU (see @sec-gpu). The catch is that you will do *many* runs here, since the experiments in step *E.* sweep both the data sliders and the model sizes. Plan which runs you actually need, and debug with `steps` cut to a few dozen before launching a full sweep.
+A 3,000-step run takes about a minute on a free Colab GPU. The reads are generated on the CPU, and on Colab that generation sets the pace rather than the GPU, so a larger model costs very little extra time. What costs you is the number of runs. Debug with `steps` cut to a few dozen before launching a sweep.
 
 {{< pagebreak >}}
 
@@ -407,11 +514,11 @@ Submit a single ZIP file with the following structure:
 ```
 final_project_ID1_ID2.zip
 ├── src/                 # your code files
-│   ├── task-1.ipynb     # Task 1: CNN for RNA-protein binding sites
-│   ├── task-2.ipynb     # Task 2: Transformer for nanopore basecalling
+│   ├── task-1/task-1.ipynb   # Task 1: CNN for RNA-protein binding sites
+│   ├── task-2/task-2.ipynb   # Task 2: Transformer for nanopore basecalling
 │   ├── any other code files for reproducibility...
 ├── llm_chats/           # exported LLM conversations (see note below)
-└── report_ID1_ID2.pdf   # < 4 pages + charts
+└── report_ID1_ID2.pdf   # < 5 pages + charts
 ```
 
 Do not include any data files in the submission, as they are very large and already available for download.
@@ -426,7 +533,7 @@ The report should be a concise summary of your work, it should show your underst
   - Include answers and results of all parts in the report.
   - Include all plots and figures that help explain your results.
   - Use clear markers for each task and question.
-- **Length**: Maximum 4 pages (excluding charts and figures, equations count towards length).
+- **Length**: Maximum 5 pages (excluding charts, figures and tables; equations count towards length).
 - **Font**: Readable (e.g., Arial) with a minimum size of 11pt and standard margins.
 - **Explanations**: Provide clear, short explanations for your model choices, esp. if they diverge from what we've seen in class. Include any challenges you faced and how you solved them.
 - **Charts**: Include relevant figures, make sure they are clear and labeled, and provide a brief explanation of how it relates to your results.
