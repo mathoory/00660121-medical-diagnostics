@@ -1,0 +1,33 @@
+name: proj-00660121
+channels:
+  - pytorch
+  - nvidia
+  - conda-forge
+  - defaults
+dependencies:
+  # Core
+  - python=3.8.12
+  - ipython
+  - jupyter
+  - jupyterlab
+  - matplotlib
+  - numpy
+  - pandas
+  - scikit-learn
+
+  # PyTorch + CUDA (clean install)
+  - pytorch
+  - torchvision
+  - torchaudio
+  - pytorch-cuda=12.1  # Do NOT add cudatoolkit manually
+
+  # Dev & Testing
+  - pytest
+  - pytest-xdist
+
+  # Pip packages
+  - pip
+  - pip:
+      - ipdb
+      - plotly
+      - tensorboard
