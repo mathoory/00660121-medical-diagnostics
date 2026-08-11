@@ -30,3 +30,5 @@ homeworks/04 Final Project/src/task-2/poc_basecaller.*
 
 # Working copies / manual solutions (the *sol* rule does not catch these names)
 *manual*.ipynb
+**/* copy.ipynb
+**/*copy*.ipynb
