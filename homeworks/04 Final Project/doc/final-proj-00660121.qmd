@@ -273,12 +273,6 @@ The part that makes this an experiment rather than a demonstration is the **cont
 
 *Q8* Report your dose-response curve for the real motif and for your control, and state what control you used and why it isolates the pattern from its base composition. Does the model respond to the pattern, to its composition, or to neither?
 
-#### Two notes on Section 6
-
-**Attention weights are not proof of use.** A bright pattern shows where attention weight went, not that the model used what it found there. Information also travels through the residual connections, and the prediction is read off the last block rather than the one you plot. Whether attention weights count as an explanation at all is an open argument in the literature (Jain and Wallace, 2019; Wiegreffe and Pinter, 2019). This is why the ablation in step *E* carries more weight than the picture in step *F*: breaking something and watching accuracy fall is evidence of a different kind.
-
-**The orientation rule is a teaching device.** A real basecaller reports whatever strand went through the pore and never complements anything, because matching a read to the right strand of a reference genome happens later, during alignment. We folded that step into the model so the task would contain one long-range dependency you can see and study. The mirroring is real bookkeeping. The adapter that flags which reads need it is our invention.
-
 #### Theoretical questions
 
 
@@ -294,42 +288,36 @@ The part that makes this an experiment rather than a demonstration is the **cont
 
 ![A squiggle from a 12-base strand. The red line is the current each group of bases in the pore produces, the blue line is what actually gets measured.](assets/squiggle-example.png){#fig-squiggle width=100%}
 
-[Basecalling](https://en.wikipedia.org/wiki/Base_calling) is the inverse problem: recover the sequence from the squiggle. In @fig-squiggle you can read the answer off the picture because the bases are printed underneath. Your model gets only the blue line. Production basecallers, such as Oxford Nanopore's [Dorado](https://nanoporetech.com/platform/technology/basecalling), do this with a Transformer.
+[Basecalling](https://en.wikipedia.org/wiki/Base_calling) is the inverse problem: recover the sequence from the squiggle. In @fig-squiggle you can read the answer off the picture because the bases are printed underneath. Your model gets only the blue line the includes measurement noise. Production basecallers, such as Oxford Nanopore's [Dorado](https://nanoporetech.com/platform/technology/basecalling), do this with a Transformer.
 
 You will build one. The function you are modelling is
 
 $$f(\text{squiggle}) = \texttt{ACGT}\ldots$$
 
-one letter for every base that went through the pore.
-
-Work `task-2.ipynb` in order. You will build the CNN you already know from Task 1 before you build anything new, because where it breaks is the reason the Transformer exists.
 
 #### The data
 
-You will not download anything for this task. You will *generate* your reads.
+You will not download anything for this task. You will generate your reads using a simulation.
 
-In Task 1 you were handed files of real RNA sequences, with labels somebody else had
-established in a lab. Here you start from the opposite end. You draw a random strand of DNA,
-simulate the current a pore would measure as that strand passed through it, and hand the
-model that simulated current. Because you invented the strand in the first place you already
-know every base of the answer, so the label is exact and free. People who build real basecallers train them this way too,
-because the physics of the pore is understood well enough to imitate convincingly.
+In Task 1 you were handed files of RNA sequences, with labels somebody else had
+established in a lab. Here you start from the opposite end. You will create a random strand of DNA,
+and simulate the current a pore would measure as that strand passed through it. These simulated measurments are your input, and the original strand is your label. Because you created the strand in the first place you already know every base of the answer. People who build real basecallers train them this way too, because the physics of the pore is understood well enough to create synthetic data.
 
 A fresh batch is drawn at every training step, so your model never sees the same read twice and there is nothing to hold out: no
 train, validation and test split. And `evaluate` draws its reads from a fixed seed, so any
 two models you train are scored on exactly the same reads, as is every submission at grading
 time.
 
-Two settings control how degraded the reads are, and you will use them in step *D*:
+Two values control the noise the reads have, and you will use them to test how your model performs under different conditions:
 
 - `noise`, the strength of the noise on the current.
 - `hetero`, which makes the noise level vary along the read.
 
-##### The pore model
+##### The pore simulation
 
 Three bases sit in the pore at once and all three affect the current. Every possible 3-mer
-has its own characteristic level, and that table of $4^3 = 64$ numbers is the *pore model*.
-A few entries from ours:
+has its own characteristic level, and that table of $4^3 = 64$ numbers is the pore model.
+A few examples from ours:
 
 ```
 AAA  +0.30        ACG  +0.13        GTA  +0.12
@@ -354,8 +342,8 @@ arrives as $60 \times 8 = 480$ numbers.
 
 That is exactly @fig-squiggle: the red line is those levels, the blue line is the same thing after noise, and each flat stretch is one step of the ratchet.
 
-Notice what this costs you: a base cannot be identified on its own, because the level at
-each step depends on the two bases before it as well.
+this means that a base cannot be identified on its own, because the level at
+each step depends on the bases next to it as well.
 
 ##### The two strands, and the adapter
 
@@ -396,39 +384,77 @@ known stretch ligated on before sequencing that passes through the pore ahead of
 our generator, reverse captures carry a leftover adapter signal at the very start of the read
 and forward captures do not. That one feature is the only thing separating them.
 
-#### What the model outputs
+#### From signal to sequence
 
-As in Task 1, the model produces numbers rather than letters. Task 1 gave one number per sequence. Here we need one of four choices at each of 60 positions, so the output is a $60 \times 4$ grid of scores, and the largest entry in each row is that base's call:
+The model turns one read into one sequence. It is worth walking the whole path once, because
+every shape in it comes back later.
+
+**The input.** One read is the 480 current samples of @fig-squiggle. Write it $s$:
+
+$$ s \;=\; [\,s_1,\, s_2,\, \ldots,\, s_{480}\,] \;\in\; \mathbb{R}^{480} $$
+
+**Step 1, tokenization.** Individual samples are the wrong unit to reason with. There are 60
+ratchet steps and 8 samples belong to each, so the first layer takes one step's 8 samples and
+turns them into a single vector of width $d$, called a **token**:
+
+$$ \underbrace{[\,s_1,\ldots,s_8\,]}_{\text{step 1}} \;\longrightarrow\; x_1 \in \mathbb{R}^{d}
+\qquad
+\underbrace{[\,s_9,\ldots,s_{16}\,]}_{\text{step 2}} \;\longrightarrow\; x_2 \in \mathbb{R}^{d} $$
+
+Do that for all 60 steps and stack the results as rows. That matrix is the model's working
+representation of the read:
+
+$$ X \;=\; \begin{bmatrix} x_1 \\ x_2 \\ \vdots \\ x_{60} \end{bmatrix} \;\in\; \mathbb{R}^{60 \times d} $$
+
+$d$ is yours to choose and is called `d_model`. The layer that does this is a convolution of
+width 8 and stride 8, the Task 1 trick again, stepping one ratchet step at a time.
+
+One caution about the word. In Tutorial 4 a token was a word and the **embedding** was a
+lookup in a learned table, one row per word in a fixed vocabulary. There is no vocabulary
+here and no lookup: the current values are already numbers, and the convolution *computes*
+each token from them. Same role in the pipeline, different mechanism.
+
+**Step 2, the stack.** Each encoder block takes 60 rows and returns 60 rows of the same
+width, so $X$ keeps its shape all the way through. What changes is the contents of each row,
+which is where self-attention comes in below.
+
+**Step 3, the head and the answer.** A `Linear` layer maps each row to 4 numbers, one per
+base:
+
+$$ O \;\in\; \mathbb{R}^{60 \times 4} $$
+
+Row $i$ holds the model's four scores for step $i$. These are raw scores, not probabilities:
+higher means more confident. A `softmax` over a row turns it into four probabilities that sum
+to 1, and the largest one is the base we call. Taking the first two rows as an example:
 
 $$
-O \;=\;
-\begin{array}{c|cccc}
- & \texttt{A} & \texttt{C} & \texttt{G} & \texttt{T} \\\hline
-\text{base } 1 & 2.7 & -0.4 & 0.1 & -1.2 \\
-\text{base } 2 & -0.9 & 0.2 & 3.1 & 0.0 \\
-\vdots & & & & \\
-\text{base } 60 & 0.3 & -1.1 & 0.4 & 2.2
+\begin{array}{c|cccc|c}
+ & \texttt{A} & \texttt{C} & \texttt{G} & \texttt{T} & \\\hline
+\text{scores, step } 1 & 2.7 & -0.4 & 0.1 & -1.2 & \\
+\text{probabilities}   & 0.87 & 0.04 & 0.06 & 0.02 & \Rightarrow\; \texttt{A} \\\hline
+\text{scores, step } 2 & -0.9 & 0.2 & 3.1 & 0.0 & \\
+\text{probabilities}   & 0.02 & 0.05 & 0.90 & 0.03 & \Rightarrow\; \texttt{G}
 \end{array}
-\;\in\; \mathbb{R}^{60 \times 4}
-\qquad\Longrightarrow\qquad
-\hat{y} = \texttt{A}\,\texttt{G}\ldots\texttt{T}
 $$
 
-Row 1's largest entry is $2.7$ under `A`, so base 1 is called `A`. The loss function compares this grid with the true bases, and the notebook provides it.
-
-#### Tokenization
-
-The 480 raw samples are not a useful input on their own. The first layer groups each step's 8 samples into a single vector of width $d$, called a **token**, giving 60 tokens per read:
+Reading the winner off all 60 rows gives the called sequence $\hat{y}$, which is what we
+compare against the true sequence $y$:
 
 $$
-\underbrace{s \in \mathbb{R}^{480}}_{\text{480 current samples}}
-\quad\longrightarrow\quad
-\underbrace{X \in \mathbb{R}^{T \times d}}_{T = 60 \text{ tokens}}
+\hat{y} = \texttt{A}\,\texttt{G}\,\ldots \qquad\text{against}\qquad y = \texttt{A}\,\texttt{C}\,\ldots
 $$
 
-One token holds everything the model knows about one step of the ratchet. You choose $d$, which is the `d_model` setting. The layer is a convolution of width 8 and stride 8, the Task 1 trick again, here stepping one base at a time.
+**What the loss is computed on.** Not on the letters. Accuracy compares $\hat{y}$ with $y$,
+but you cannot train on it, because taking the largest entry throws away how confident the
+model was and gives no gradient. The loss instead reads $O$ directly: at each of the 60
+positions it takes the probability the model assigned to the *correct* base and penalises it
+for being small. That is **cross-entropy**, one value per position, averaged over the 60
+positions and over the batch.
 
-The stack takes $T$ tokens and returns $T$ tokens. Only the width changes, and the head turns each token into its 4 scores.
+Task 1 did the two-choice version of exactly this, where `sigmoid` produced one probability
+and `BCEWithLogitsLoss` measured how wrong it was. Here `softmax` and `nn.CrossEntropyLoss`
+do the four-choice version. As with `BCEWithLogitsLoss`, the softmax is applied inside the
+loss, so your model's head must output the raw scores $O$ with no softmax after it.
 
 #### Self-attention
 
@@ -444,7 +470,7 @@ The sum runs over every token $j$, so any token can draw on any other, near or f
 
 #### Building the model
 
-You assemble the architecture the same way you assembled the CNN in Task 1, as a list of layers applied in order:
+You assemble the architecture the same way you assembled the CNN in Task 1, as a list of layers we provide for you applied in order:
 
 $$
 \text{signal} \;\to\; [\text{Tokenizer}] \;\to\; +[\text{Positional encoding}] \;\to\; N\times[\text{Encoder block}] \;\to\; [\text{Head}] \;\to\; \texttt{ACGT}
@@ -452,8 +478,15 @@ $$
 
 - **Tokenizer**: the convolution above. Turns the 480 samples into $T$ tokens of width `d_model`.
 - **Positional encoding**: attention alone has no notion of order, so a fixed position signature is added to each token. As in the tutorial it is added to the tokens, not applied as a layer.
-- **Encoder block**: self-attention followed by a small per-token network, plus several things that keep a deep stack trainable. It is written for you and nothing inside it is yours to change, though you will look at one part of it in Section 6. You stack `n_layers` of them.
+- **Encoder block**: self-attention followed by a small per-token network, plus several things that keep a deep stack trainable. You stack `n_layers` of them.
 - **Head**: a `Linear` layer turning each token into its 4 scores, like the `Linear(..., 1)` that ended your CNN in Task 1, with 4 outputs instead of 1.
+
+The notebook gives you these as classes. Their constructors take exactly the sizes above:
+
+```
+Tokenizer(d_model)                        PositionalEncoding(d_model)
+EncoderBlock(d_model, n_heads, d_ff)      nn.Linear(d_model, 4)
+```
 
 Your architecture decisions are four sizes:
 
@@ -464,35 +497,40 @@ Your architecture decisions are four sizes:
 | `n_heads` | how many attention patterns each block computes side by side, the *heads* from Tutorial 4. They divide `d_model` between them, so `d_model` must be a multiple of `n_heads`. |
 | `d_ff` | the width of the small per-token network inside each block. It is normally a small multiple of `d_model`. |
 
-Nothing tells you what the right values are. Finding out is step *D*.
 
 #### Instructions
 
 Work through `task-2.ipynb` in order. Each step corresponds to one section of the notebook.
 
-*A.* **Look at the data** (Section 1). Read the generator and plot a few reads of each kind.
+*A.* **Look at the data** (Section 1). Plot a few reads (forward and reverse) and their labels. Look at the adapter signal and see how it separates the two orientations.
 
 *Q10* What separates a forward capture from a reverse one in the signal? And on a reverse capture, which part of the signal determines the first base you have to report?
 
-*B.* **Build the CNN** (Section 2, `TODO-1`) and train it. `evaluate` reports overall accuracy and the two orientations separately.
+*B.* **Run the CNN** (Section 2). It is written out for you, since you built one in Task 1. Train it and read the two orientation columns separately. `evaluate` reports overall accuracy and the two orientations separately.
 
 *Q11* Report your CNN's accuracy overall and on each orientation, and explain the result. What property of a convolutional architecture is responsible, and would adding more filters help?
 
-*C.* **Build the Transformer** (Section 3, `TODO-2` and `TODO-3`). Assemble it from the provided layers, choose your sizes, and train it on the same data. Note the parameter counts that `train` prints, since the two models are deliberately close in size.
+*C.* **Build the Transformer** (Section 3, `TODO-1` and `TODO-2`). Assemble it from the provided layers, choose your sizes, and train it on the same data. Note the parameter counts that `train` prints, since the two models are deliberately close in size.
 
 *Q12* Report your Transformer's accuracy next to your CNN's. What changed, and what does that tell you about the two architectures?
 
-*D.* **Choose an architecture** (Section 4, `TODO-4`). Vary the model sizes and the data settings, and keep the runs you need to justify a choice. Then train your chosen model in the graded regime, `noise=0.5, hetero=0.6`.
+*D.* **Choose an architecture** (Section 4, `TODO-3`). Vary the model sizes and the data settings, and keep the runs you need to justify a choice. Then train your chosen model in the graded regime, `noise=0.5, hetero=0.6`.
 
 *Q13* Report your final architecture (`d_model`, `n_heads`, `n_layers`, `d_ff`, and total parameters) and justify it with your plots, including accuracy against noise for at least two model sizes.
 
-*E.* **Ablation** (Section 5, `TODO-5`). Predict what removing the positional encoding will do to each orientation, then rebuild with `use_pe=False`, keeping every other size fixed, and retrain.
+*E.* **Ablation** (Section 5, `TODO-4`). Predict what removing the positional encoding will do to each orientation, then rebuild with `use_pe=False`, keeping every other size fixed, and retrain.
 
 *Q14* State the prediction you made, report both orientations with and without the positional encoding, and explain the difference.
 
 *F.* **Look inside it** (Section 6). Run the attention plot on a reverse capture and work out which head is doing which job.
 
 *Q15* Which head in your model is doing what, and what gave each one away? Relate this to your answer in *Q11*. Does a large attention weight prove the model used the position it points at? Say what evidence would settle it.
+
+#### Two notes on Section 6
+
+**Attention weights are not proof of use.** A bright pattern shows where attention weight went, not that the model used what it found there. Information also travels through the residual connections, and the prediction is read off the last block rather than the one you plot. Whether attention weights count as an explanation at all is an open argument in the literature (Jain and Wallace, 2019; Wiegreffe and Pinter, 2019). This is why the ablation in step *E* carries more weight than the picture in step *F*: breaking something and watching accuracy fall is evidence of a different kind.
+
+**The orientation rule is a teaching device.** A real basecaller reports whatever strand went through the pore and never complements anything, because matching a read to the right strand of a reference genome happens later, during alignment. We folded that step into the model so the task would contain one long-range dependency you can see and study. The mirroring is real bookkeeping. The adapter that flags which reads need it is our invention.
 
 #### Theoretical question
 
@@ -504,7 +542,7 @@ Part of the grade rewards accuracy in a fixed, harder regime (`noise=0.5, hetero
 
 #### Compute for this task
 
-A 3,000-step run takes about a minute on a free Colab GPU. The reads are generated on the CPU, and on Colab that generation sets the pace rather than the GPU, so a larger model costs very little extra time. What costs you is the number of runs. Debug with `steps` cut to a few dozen before launching a sweep.
+Use a GPU for this task, as in Task 1 (see @sec-gpu). A 3,000-step run then takes about a minute on a free Colab GPU. The reads are generated on the CPU, and on Colab that generation sets the pace rather than the GPU, so a larger model costs very little extra time. What costs you is the number of runs. Debug with `steps` cut to a few dozen before launching a sweep.
 
 {{< pagebreak >}}
 
