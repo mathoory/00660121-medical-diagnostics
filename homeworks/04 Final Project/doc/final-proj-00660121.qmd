@@ -118,7 +118,7 @@ This is the heavier of the two tasks: about 92,000 training sequences (plus 1,00
 
 *Q1* Explain the role of the AGO2 protein.
 
-*Q2* How can CNN filters capture sequence motifs? What is the purpose of the convolutional layers, and how do they differ from fully connected ones? Once you have built your model, support your answer with its own numbers: how many parameters are in your first convolutional layer, and how many would a fully connected layer covering the same input need?
+*Q2* How can CNN filters capture sequence motifs? What is the purpose of the convolutional layers, and how do they differ from fully connected ones?
 
 *Q3* Report number of positive and negative sequences in the train and validation sets.
 
@@ -425,19 +425,6 @@ $$
 
 The sum runs over every token $j$, so any token can draw on any other, near or far.
 
-#### Reading attention maps
-
-The attention weights are the one part of a trained model you can look at directly. For a
-single read, $a_{ij}$ is a number for every pair of positions, so one head gives one square
-grid: row $i$ is the position being computed, column $j$ is the position it looked at, and
-brightness is the weight. Each row is a softmax, so it sums to 1. An even split over all 60
-positions would be $1/60 = 0.017$ everywhere, and a bright cell means a single position took
-a large share of that row.
-
-Three shapes are worth being able to recognise by sight:
-
-![The three shapes, drawn by hand rather than taken from a model. A trained head may show one of them, a mixture of them, or nothing recognisable at all.](assets/attention-shapes.png){#fig-shapes width=100%}
-
 #### Building the model
 
 The model is a list of blocks applied in order:
@@ -523,6 +510,29 @@ Work through `task-2.ipynb` in order. Each part corresponds to one section of th
 
 *Q14* Report both orientations with and without the positional encoding. Account for what changed, and for any difference between the two orientations.
 
+{{< pagebreak >}}
+
+#### Reading attention maps
+
+Look again at what self-attention computes: $z_i = \sum_j a_{ij} v_j$. The new vector for
+token $i$ is a weighted average of the values from *every* token, and $a_{ij}$ is the weight
+on token $j$. So each of those numbers answers something concrete: **when the model computed
+the new vector for token $i$, how much of it came from token $j$?**
+
+Those weights come from a softmax over $j$, so row $i$ is a distribution over where token $i$
+drew its information from: spread evenly it would be $1/60 \approx 0.017$ in every cell, and a
+bright cell means token $i$ took most of its input from one place.
+
+One read gives $60 \times 60$ of these numbers per head. Drawn as an image, with row $i$ down
+the page, column $j$ across it and brightness for $a_{ij}$, it shows where all 60 tokens looked
+at once. Three patterns are worth recognising on sight: a **main diagonal**, each token
+attending to itself and its neighbours; a **vertical stripe**, every token attending to the
+same one column; and an **anti-diagonal**, token $i$ attending to token $59-i$.
+
+![The three shapes, drawn by hand rather than taken from a model. A trained head may show one of them, a mixture, or nothing recognisable at all.](assets/attention-shapes.png){#fig-shapes width=100% fig-pos="H"}
+
+{{< pagebreak >}}
+
 *F.* **Attention Maps** (Section 6, `TODO-4`). Plot the attention maps on a reverse read to see which attention heads are active. Then silence each head in turn and re-score, so you can compare what the maps suggest against what the model actually learnd. Whether attention weights count as an explanation at all is an open argument in the literature.
 
 *Q15* Is it possible/impossible to identify specific attention heads that are specifically responsible for the orientation? How can you tell? What do the attention maps show, and how does that relate to your answer in *Q11*?
@@ -530,10 +540,6 @@ Work through `task-2.ipynb` in order. Each part corresponds to one section of th
 #### Theoretical questions
 
 *Q16* In a short paragraph, relate self-attention here to its use in protein language models, which attend across amino-acid residues. Why is the ability to look across a whole sequence useful in biology?
-
-*Q17* The embedding is a convolution of width 8 and stride 8. Explain what each of the two
-numbers is doing, and why both of them are 8 here. If you changed the stride to 4 and left
-everything else alone, what would be the effect?
 
 {{< pagebreak >}}
 
