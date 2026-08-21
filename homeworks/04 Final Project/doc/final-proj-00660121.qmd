@@ -425,6 +425,19 @@ $$
 
 The sum runs over every token $j$, so any token can draw on any other, near or far.
 
+#### Reading attention maps
+
+The attention weights are the one part of a trained model you can look at directly. For a
+single read, $a_{ij}$ is a number for every pair of positions, so one head gives one square
+grid: row $i$ is the position being computed, column $j$ is the position it looked at, and
+brightness is the weight. Each row is a softmax, so it sums to 1. An even split over all 60
+positions would be $1/60 = 0.017$ everywhere, and a bright cell means a single position took
+a large share of that row.
+
+Three shapes are worth being able to recognise by sight:
+
+![The three shapes, drawn by hand rather than taken from a model. A trained head may show one of them, a mixture of them, or nothing recognisable at all.](assets/attention-shapes.png){#fig-shapes width=100%}
+
 #### Building the model
 
 The model is a list of blocks applied in order:
@@ -494,15 +507,15 @@ Work through `task-2.ipynb` in order. Each part corresponds to one section of th
 
 *Q10* What separates a forward capture from a reverse one in the signal? And on a reverse capture, which part of the signal determines the first base you have to report?
 
-*B.* **Run the CNN** (Section 2). It is written out for you. Train it, and read the two orientation columns rather than the overall number.
+*B.* **Run the CNN** (Section 2).
 
 *Q11* Report your CNN's accuracy overall and on each orientation, and explain the result. What property of a convolutional architecture is responsible, and would adding more filters (`C`) help?
 
-*C.* **Train the Transformer** (Section 3, `TODO-1`). The model is written out for you, as the CNN was. Choose your sizes, and train it on the same data. Note the parameter counts that `train` prints, since the two models are deliberately close in size.
+*C.* **Train the Transformer** (Section 3, `TODO-1`). Choose your sizes, and train it on the same data.
 
 *Q12* Report your Transformer's accuracy next to your CNN's. What changed, and what does that tell you about the two architectures?
 
-*D.* **Choose a configuration** (Section 4, `TODO-2`). Vary the model sizes and the data settings, and keep the runs you need to justify a choice. Part of the grade rewards how well that choice performs: your submitted notebook is re-run on a fixed set of data settings that we do not publish, scored with `evaluate` so that every submission is measured on identical reads. Your configuration has to hold up in conditions you could not tune for, which is what the sweep is for. Save the model you settle on with the cell at the end of Section 4 and include the resulting `basecaller.pt` in your submission - that file is what the performance grade is computed from, so a model you cannot reload is a model we cannot score.
+*D.* **Choose a configuration** (Section 4, `TODO-2`). Vary the model sizes and the data settings. Save your best model at the end of Section 4 and include the resulting `basecaller.pt` in your submission. That file will be used for grading and will be tested under different noise conditions.
 
 *Q13* Report your final configuration (`d_model`, `n_heads`, `n_blocks`, `d_ff`, and total parameters) and justify it with your plots, including accuracy against noise for at least two model sizes.
 
@@ -510,9 +523,9 @@ Work through `task-2.ipynb` in order. Each part corresponds to one section of th
 
 *Q14* Report both orientations with and without the positional encoding. Account for what changed, and for any difference between the two orientations.
 
-*F.* **Look inside it** (Section 6, `TODO-4`). Plot the attention maps on a reverse read and work out which head is doing which job. Then silence each head in turn and re-score, so you can set what the maps suggest against what the model actually loses. Whether attention weights count as an explanation at all is an open argument in the literature.
+*F.* **Attention Maps** (Section 6, `TODO-4`). Plot the attention maps on a reverse read to see which attention heads are active. Then silence each head in turn and re-score, so you can compare what the maps suggest against what the model actually learnd. Whether attention weights count as an explanation at all is an open argument in the literature.
 
-*Q15* Which attention head in your model is doing what, and what gave each one away? Relate this to your answer in *Q11*. Then set the maps against the ablation: report what each head costs the model on each orientation, and say whether a head's picture predicted its cost. Name any head where the two disagree, and account for the disagreement.
+*Q15* Is it possible/impossible to identify specific attention heads that are specifically responsible for the orientation? How can you tell? What do the attention maps show, and how does that relate to your answer in *Q11*?
 
 #### Theoretical questions
 
@@ -520,7 +533,7 @@ Work through `task-2.ipynb` in order. Each part corresponds to one section of th
 
 *Q17* The embedding is a convolution of width 8 and stride 8. Explain what each of the two
 numbers is doing, and why both of them are 8 here. If you changed the stride to 4 and left
-everything else alone, what would come out of the model, and why would the loss stop working?
+everything else alone, what would be the effect?
 
 {{< pagebreak >}}
 
