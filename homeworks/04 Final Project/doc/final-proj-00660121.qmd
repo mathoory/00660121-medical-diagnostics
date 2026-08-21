@@ -12,7 +12,7 @@ format:
     number-sections: true
 semester: Spring 2026
 submission-date: 09.09.26
-update-date: 31.07.26
+update-date: 20.08.26
 author:
   - name: Mattan Hoory
     acknowledgements: | 
@@ -26,7 +26,7 @@ author:
 
 Convolutional Neural Networks (CNNs) and Transformers are two landmark deep learning architectures. The goal of this project is to (1) understand how they work in practice, (2) apply them to sequence data to solve problems in computational biology, and (3) learn about modern methodologies for implementing and training them.
 
-We start with sequence classification: a CNN that predicts whether an RNA-binding protein (RBP) binds a given sequence. We then use the trained model to find the sequence motifs it learned ([Task @sec-task-cnn]). Next we move to sequence-to-sequence modelling with the architecture behind modern language models: a Transformer that reads a noisy nanopore current signal and calls the DNA sequence behind it, a task known as *basecalling* ([Task @sec-task-tx]). The Transformer's core idea, self-attention, is the same one that powers language models, and we will see why it succeeds where a CNN cannot.
+We start with sequence classification: a CNN that predicts whether an RNA-binding protein (RBP) binds a given sequence. We then use the trained model to find the sequence motifs it learned (Task -@sec-task-cnn). Next we move to sequence-to-sequence modelling with the architecture behind modern language models: a Transformer that reads a noisy nanopore current signal and calls the DNA sequence behind it, a task known as *basecalling* (Task -@sec-task-tx). The Transformer's core idea, self-attention, is the same one that powers language models, and we will see why it succeeds where a CNN cannot.
 
 Both tasks build directly on how you built a network from layers in HW2. What is new is the architecture in each case, and what you can learn by looking inside a trained model to explain its behavior (known as explainability or [XAI](https://en.wikipedia.org/wiki/Explainable_artificial_intelligence)).
 
@@ -39,7 +39,7 @@ In each task we provide a "skeleton" (Jupyter notebook) to help you get started 
 **Late submission:** 10% penalty per day.
 **Submission:** .ZIP file through Moodle, see @sec-submission.
 
-- *Steps* are marked *A., B., ...*. You should complete them in the provided Jupyter notebooks. Either by filling in the TODOs or by writing your own code. The completed notebooks should be included in your submission. You will not be evaluated on the code itself, but on the results you obtain and the report you write.
+- *Parts* are marked *A., B., ...*. You should complete them in the provided Jupyter notebooks. Either by filling in the TODOs or by writing your own code. The completed notebooks should be included in your submission. You will not be evaluated on the code itself, but on the results you obtain and the report you write.
   - Each notebook contains its own instructions, so read it alongside this document. You can edit and run the notebooks in VSCode, Jupyter Notebook, Google Colab, or Kaggle as described in HW0.
 - *Questions/Plots* are marked *Q1, Q2, ...*. These require you to answer the questions or use code to create the plots, and then include them in your report.
 
@@ -69,7 +69,7 @@ You have free GPU access on Google Colab and on Kaggle Kernels, and both give yo
 
 **How to not waste your quota.** The GPU clock runs whether or not your code is correct, and most of the time you lose is spent on runs that crash three minutes in, or that you did not need in the first place.
 
-1. **Debug on CPU first, on a deliberately tiny problem.** In Task 1, load only a few hundred sequences and train for one epoch. In Task 2, drop `steps` to a few dozen. You are not looking for good accuracy here, only for code that runs end to end without errors.
+1. **Debug on CPU first, on a deliberately tiny problem.** In Task 1, load only a few hundred sequences and train for one epoch. In Task 2, drop the number of training `steps` to a few dozen. You are not looking for good accuracy here, only for code that runs end to end without errors.
 2. **Only then switch the runtime to GPU** and scale up to the full data and a realistic number of epochs.
 3. **Decide what each run is testing before you launch it.** Changing three hyper-parameters at once tells you nothing about which one mattered.
 4. **Save your results as you go** (metrics, plots), so a disconnected session does not cost you a rerun. Colab and Kaggle both disconnect idle sessions.
@@ -109,34 +109,34 @@ Unzip the archive and place the four `.fa` files in the same directory as the no
 Pan, Xiaoyong, and Hong-Bin Shen. “Predicting RNA-protein binding sites and motifs through combining local and global deep convolutional neural networks.” Bioinformatics (Oxford, England) vol. 34,20 (2018): 3427-3436. [https://doi.org/10.1093/bioinformatics/bty364](https://doi.org/10.1093/bioinformatics/bty364)
 
 ##### Compute for this task
-This is the heavier of the two tasks: about 92,000 training sequences (plus 1,000 for validation), and you will train several architectures. Use a GPU (see @sec-gpu), and debug on a few hundred sequences for a single epoch before you scale up.
+This is the heavier of the two tasks: about 92,000 training sequences (plus 1,000 for validation), and you will train several configurations. Use a GPU (see @sec-gpu), and debug on a few hundred sequences for a single epoch before you scale up.
 
 
 #### Instructions
 
 *A.* Read the Introduction and Materials and methods (up to and including 2.4) of the publication above (Pan & Shen, 2018). Their work is our inspiration rather than a specification: we build one global CNN of our own design and skip their local CNN and the ensemble. Section 2.4 is the basis for the motif part of this task. 
 
-*Q1* Explain the role of the AGO2 protein,
+*Q1* Explain the role of the AGO2 protein.
 
-*Q2* How can CNN filters capture sequence motifs? What is the purpose of the convolutional layers, and how do they differ from fully connected ones? Once you have built your model, support your answer with its own numbers: how many parameters are in your first convolutional layer, and how many would a fully connected layer covering the same input need?
+*Q2* How can CNN filters capture sequence motifs? What is the purpose of the convolutional layers, and how do they differ from fully connected ones?
 
 *Q3* Report number of positive and negative sequences in the train and validation sets.
 
 *Note on splits:* this task has only two sets. Train only on the `train.*` files. The `ls.*` files are never trained on, and they play both roles that HW1 and HW2 split between a validation and a test set: you compare architectures by their `ls.*` score, and you also report your final numbers on `ls.*`. There is no third set here. Because you chose your architecture by looking at these sequences, your reported score is a mildly optimistic estimate of true performance, which is worth a sentence in your report.
 
-*B.* Implement the CNN model in `task-1.ipynb` (TODO-1) and the validation loop (TODO-2).
+*B.* Implement the CNN model in `task-1.ipynb` (Section 1, `TODO-1`) and the validation loop (Section 2, `TODO-2`).
 
 One fact about the shapes is worth knowing before you start, because it is about the data rather than about PyTorch. Your input is $(N, 1, 4, L)$, where the height is the four nucleotide rows. The first convolution spans all four of them at once, so after it the height is $1$ and stays $1$: from there on, every layer is working along the length of the sequence only.
 
-*C.* Train the model using different architectures and any hyper-parameters you find relevant. Remember, you are limited to the GPU time quota. The term architecture here refers to the model layers and their parameters. For example: number of convolutional layers, their kernel sizes, and the number of filters in each layer. You can also experiment with different learning rates, batch sizes, and optimizers.
+*C.* Train the model using different configurations and any hyper-parameters you find relevant. Remember, you are limited to the GPU time quota. A configuration here means the model layers and their settings. For example: number of convolutional layers, their kernel sizes, and the number of filters in each layer. You can also experiment with different learning rates, batch sizes, and optimizers.
 
 *Q4* Plot the learning curves on the train set (loss vs epochs), and theorize how your architecture affected the learning process.
 
-*D.* Model evaluation: In HW1 we have seen how TPR and FPR can be used to measure the performance of a binary classifier. In this task, we will use the ROC curve and AUC to evaluate our model. Here, we train a model that outputs a score (higher = more likely bound). To turn scores into 0/1 calls we pick a threshold. Different users may want high sensitivity or high specificity and may choose different thresholds accordingly.
+*D.* Model evaluation: In HW1 we have seen how TPR and FPR can be used to measure the performance of a binary classifier. In this task, we will use the ROC curve and AUC to evaluate our model. Here, we train a model that outputs a **logit**, a raw score which the sigmoid turns into a probability (higher = more likely bound). To turn probabilities into 0/1 calls we pick a threshold. Different users may want high sensitivity or high specificity and may choose different thresholds accordingly.
 
 The [Receiver Operating Characteristic (ROC) curve](https://developers.google.com/machine-learning/crash-course/classification/roc-and-auc) shows how sensitivity (True Positive Rate, TPR) trades off against 1-specificity (False Positive Rate, FPR) as you vary the decision threshold from 1.0 down to 0.0. 
 
-Reminder: Each threshold classifies examples based on their score.
+Reminder: Each threshold classifies examples based on their probability.
 
 $$\tilde y_{i,\text{binary}} = \begin{cases}
   1 & \text{if } \text{score} \ge \text{threshold}\\[2pt]
@@ -146,12 +146,12 @@ $$
 
 Because this threshold can be varied, we are interested in how the model performs across all thresholds, not just the one that maximizes accuracy. For each threshold, we can compute:
 
-* $\text{TPR} = \text{TP} / (\text{TP} + \text{FN})$  "of all real positives, how many did we catch?”
-* $\text{FPR} = \text{FP} / (\text{FP} + \text{TN})$  "of all real negatives, how many did we wrongly call positive?”
+* $\text{TPR} = \text{TP} / (\text{TP} + \text{FN})$  "of all real positives, how many did we catch?"
+* $\text{FPR} = \text{FP} / (\text{FP} + \text{TN})$  "of all real negatives, how many did we wrongly call positive?"
 
-**A worked example.** Say we have 10 validation sequences, 5 that really bind (1) and 5 that do not (0), and the model gives each one a score:
+**A worked example.** Say we have 10 validation sequences, 5 that really bind (1) and 5 that do not (0), and the model gives each one a probability:
 
-| score | 0.95 | 0.88 | 0.71 | 0.63 | 0.55 | 0.44 | 0.31 | 0.22 | 0.14 | 0.05 |
+| probability | 0.95 | 0.88 | 0.71 | 0.63 | 0.55 | 0.44 | 0.31 | 0.22 | 0.14 | 0.05 |
 |-------|------|------|------|------|------|------|------|------|------|------|
 | true label | 1 | 1 | 0 | 1 | 1 | 0 | 1 | 0 | 0 | 0 |
 
@@ -170,18 +170,18 @@ Read the pattern: lowering the threshold can only raise TPR and FPR together, ne
 
 This gives us two things:
 
-* **Comparing models.** The Area Under the ROC Curve (AUC-ROC) is the area under that graph, a single number summarising performance across *all* thresholds. 0.5 is random guessing, 1.0 is perfect. Because it does not depend on any one threshold, it is a fair way to compare two architectures.
+* **Comparing models.** The Area Under the ROC Curve (AUC-ROC) is the area under that graph, a single number summarising performance across *all* thresholds. 0.5 is random guessing, 1.0 is perfect. Because it does not depend on any one threshold, it is a fair way to compare two configurations.
 * **Choosing a threshold.** The curve shows what each choice costs. A screening assay where missing a binder is expensive would pick a point high up the curve and accept the false alarms. An experiment where testing each candidate is expensive would pick a point far to the left and accept missing some binders.
 
 To calculate the AUC-ROC and plot the ROC curve, you can use the [`roc_curve`](https://scikit-learn.org/stable/modules/generated/sklearn.metrics.roc_curve.html) and [`roc_auc_score`](https://scikit-learn.org/stable/modules/generated/sklearn.metrics.roc_auc_score.html) functions from the scikit-learn library.
 
 *Q5* Final held-out metrics: for your best model, report the accuracy, plot the ROC curve, and report the AUC - all on the validation (`ls.*`) set.
 
-*Q6* Report the model's architecture: a short layer-by-layer description (shapes and total trainable parameters).
+*Q6* Report the model's configuration: a short layer-by-layer description (shapes and total trainable parameters).
 
 {{< pagebreak >}}
 
-#### Interpretation: Motif Prediction
+#### Interpretation: Motif Discovery
 
 Now that we have a model, we can predict for each sequence whether it binds or not, but we also want to know *why* it made that decision. That means, we would like to find out what sequence patterns the model learned to recognize as binding sites. This is known as *motif discovery*. [Sequence motifs](https://en.wikipedia.org/wiki/Sequence_motif) are short, recurring nucleotide patterns that are statistically enriched (more frequent) in binding sites and we will use them to capture the base-level preferences of an RBP. A motif can be represented as a Position Weight Matrix (PWM) - see example below: for each position in the motif (say length 10), we sum how often A, C, G, or U occurs across many aligned instances and convert those counts to probabilities. Tall columns in a logo mean strong base preference, flat columns mean weak ones. 
 
@@ -189,9 +189,9 @@ $$
 \underbrace{
 \begin{array}{c|cccc}
      & 1 & 2 & 3 & 4 \\\hline
-\text{read 1}  & A & C & G & U \\
-\text{read 2}  & A & U & G & U \\
-\text{read 3}  & A & C & U & U \\
+\text{seq 1}  & A & C & G & U \\
+\text{seq 2}  & A & U & G & U \\
+\text{seq 3}  & A & C & U & U \\
 \end{array}
 }_{\text{Raw Sequences}}
 \;\Longrightarrow\;
@@ -212,7 +212,7 @@ $$
 
 In full research pipelines, investigators locate motifs by opening up a trained convolutional neural network and inspecting its first-layer filters, which act like motif detectors. That is exactly what we will do here, and the procedure is short enough to write yourself.
 
-The idea is that you do not need to read a filter's weights to find out what it looks for. You can watch it work. We will apply the first convolutional layer on positive (binding) examples from our dataset, and record the outputs. Wherever a filter produces a high value, it has met a pattern it "likes". We can then save all preferred patterns. We wll use those to create a PWM, and the PWM drawn as letters is the logo.
+The idea is that you do not need to read a filter's weights to find out what it looks for. You can watch it work. We will apply the first convolutional layer on positive (binding) examples from our dataset, and record the outputs. Wherever a filter produces a high value, it has met a pattern it "likes". We can then save all preferred patterns. We will use those to create a PWM, and the PWM drawn as letters is the logo.
 
 "Likes" needs a number attached to it. We use the same rule as the paper: for each filter we compute a **cutoff**, and any position where that filter's output is above its cutoff counts as a hit.
 
@@ -233,7 +233,7 @@ $$
 \end{array}
 $$
 
-Five placements, so five numbers. Do the same for two more sequences:
+Five windows, so five numbers. Do the same for two more sequences:
 
 $$
 \begin{array}{c|c|ccccc}
@@ -248,7 +248,7 @@ There are 15 numbers in total. Their mean is $5.5 / 15 = 0.37$ and the largest i
 
 $$\text{cutoff} = 0.37 + 0.5 \times (2.4 - 0.37) = 1.38 .$$
 
-Two of the 15 placements are above $1.38$: position 3 of sequence 1, and position 2 of sequence 3. Everything else is background. For each hit we take the $k = 4$ bases starting at that position:
+Two of the 15 windows are above $1.38$: position 3 of sequence 1, and position 2 of sequence 3. Everything else is background. For each hit we take the $k = 4$ bases starting at that position:
 
 - seq 1, position 3 $\rightarrow$ `ACGU`
 - seq 3, position 2 $\rightarrow$ `UCGU`
@@ -261,19 +261,19 @@ Each filter gives you one logo. Some will show a clear preference and others wil
 
 **In short:** apply the filter, keep the windows that score above the cutoff, count them into a PWM, draw the logo.
 
-*E.* **Read a motif off the model.** Complete the readout in `task-1.ipynb` (TODO-3) by assembling the provided helpers. Export a handful of filters, turn them into logos with [WebLogo](https://weblogo.threeplusone.com/create.cgi), and include two or three in your report. Expect some to come out flat: a filter that learned nothing is a result too.
+*E.* **Read a motif off the model.** Complete the readout in `task-1.ipynb` (Section 3.1, `TODO-3`) by assembling the provided helpers. Export a handful of filters, turn them into logos with [WebLogo](https://weblogo.berkeley.edu/logo.cgi), and include two or three in your report. Expect some to come out flat: a filter that learned nothing is a result too.
 
 *Q7* Looking at your logos: what kind of sequence does your model prefer? Which filter did you take forward to the next step, and why? What is it about its picture that made you pick it? Any outliers?
 
 As we have seen in class, learned filters (weights) differ from model to model and are not always easily explainable. Your logos will not match your classmates' exactly, and that is expected. Usually these results are validated against known literature.
 
-*F.* **Test the motif.** A logo is a *claim* about what the model responds to, and so far nothing has tested it. In `task-1.ipynb` (TODO-4) you will put the claim to the model directly: score a batch of random sequences, then plant your motif into those same sequences and score them again, using several copy numbers so you get a **dose-response** curve. If the model really responds to the pattern, more copies should push the score up.
+*F.* **Test the motif.** A logo is a *claim* about what the model responds to, and so far nothing has tested it. In `task-1.ipynb` (Section 3.2, `TODO-4`) you will put the claim to the model directly: score a batch of random sequences, then plant your motif into those same sequences and score them again, using several copy numbers so you get a **dose-response** curve. If the model really responds to the pattern, more copies should push the score up.
 
 The part that makes this an experiment rather than a demonstration is the **control**. A rise in score after planting a G/C-rich motif could mean the model responds to that specific pattern, or merely that it likes G/C-rich sequences. You have to build a comparison that separates those two explanations, run it alongside the real motif, and say in your report what you chose and why it isolates what you want.
 
 *Q8* Report your dose-response curve for the real motif and for your control, and state what control you used and why it isolates the pattern from its base composition. Does the model respond to the pattern, to its composition, or to neither?
 
-#### Theoretical questions
+#### Theoretical question
 
 
 *Q9* Can the fully connected layers in the model be of any size? Why or why not? What is the effect of the size of the fully connected layer on the model's performance?
@@ -286,37 +286,42 @@ The part that makes this an experiment rather than a demonstration is the **cont
 
 [Nanopore sequencing](https://en.wikipedia.org/wiki/Nanopore_sequencing) reads DNA by pulling a single strand through a protein pore and measuring the ionic current across it. The bases inside the pore set the current, so a read arrives as a noisy one-dimensional signal called a *squiggle*:
 
-![A squiggle from a 12-base strand. The red line is the current each group of bases in the pore produces, the blue line is what actually gets measured.](assets/squiggle-example.png){#fig-squiggle width=100%}
+![A squiggle from a 12-base strand. The red line is the current each 3-mer in the pore produces. The blue dots are the individual measurements the model receives, eight for every step of the ratchet.](assets/squiggle-example.png){#fig-squiggle width=100%}
 
-[Basecalling](https://en.wikipedia.org/wiki/Base_calling) is the inverse problem: recover the sequence from the squiggle. In @fig-squiggle you can read the answer off the picture because the bases are printed underneath. Your model gets only the blue line the includes measurement noise. Production basecallers, such as Oxford Nanopore's [Dorado](https://nanoporetech.com/platform/technology/basecalling), do this with a Transformer.
+[Basecalling](https://en.wikipedia.org/wiki/Base_calling) is the inverse problem: recover the sequence from the squiggle. In @fig-squiggle you can read the answer off the picture because the bases are printed underneath. Production basecallers, such as Oxford Nanopore's [Dorado](https://nanoporetech.com/platform/technology/basecalling), now do this with a [Transformer](https://en.wikipedia.org/wiki/Transformer_(deep_learning_architecture)). The model gets only the blue dots, generated by sequencing, and attempts to reconstruct the sequence. In other words, it learns (approximates) a function that takes a list of current measurements and returns a string of bases:
 
-You will build one. The function you are modelling is
+$$
+f\bigl(\underbrace{\text{squiggle}}_{\text{96 numbers, above}}\bigr) \;=\; f(s_1,\dots,s_{96}) \;=\; \underbrace{\texttt{ACGTACTTGAGC}}_{\text{12 bases}}
+$$
 
-$$f(\text{squiggle}) = \texttt{ACGT}\ldots$$
+##### Compute
 
+Remember to use a GPU for this task (see @sec-gpu), as the computations are intensive. Decide what each run is testing before you launch it, and control the number of training steps.
 
 #### The data
 
-You will not download anything for this task. You will generate your reads using a simulation.
+You will generate your reads using a simulation, instead of being provided with a dataset.
 
-In Task 1 you were handed files of RNA sequences, with labels somebody else had
-established in a lab. Here you start from the opposite end. You will create a random strand of DNA,
-and simulate the current a pore would measure as that strand passed through it. These simulated measurments are your input, and the original strand is your label. Because you created the strand in the first place you already know every base of the answer. People who build real basecallers train them this way too, because the physics of the pore is understood well enough to create synthetic data.
+In Task 1 you were given files of RNA sequences, with labels that were already established in a lab.
+Here you will create a random strand of DNA,
+and simulate the current a pore would measure as that strand passed through it to assign a squiggle to it. These simulated squiggles are your input ($\mathbf{X}$), and the DNA sequence of the strand is your label ($\mathbf{y}$). Because you created the DNA strand in the first place you already know every base of the answer. The pore's physics is understood well enough that simulators like ours are a standard tool, used to benchmark basecallers and to test pipelines where no real data exists. Production basecallers are trained on real reads instead, labelled by aligning them to a genome that is already known.
 
-A fresh batch is drawn at every training step, so your model never sees the same read twice and there is nothing to hold out: no
-train, validation and test split. And `evaluate` draws its reads from a fixed seed, so any
+A batch is generated at every training step, so your model never sees the same read twice and there is nothing to hold out: no
+train, validation and test split. `evaluate` draws its reads from a fixed seed, so any
 two models you train are scored on exactly the same reads, as is every submission at grading
 time.
 
-Two values control the noise the reads have, and you will use them to test how your model performs under different conditions:
+Two settings control the noise in the reads, and you will use them to test how your model performs under different conditions:
 
-- `noise`, the strength of the noise on the current.
-- `hetero`, which makes the noise level vary along the read.
+- `noise`, the strength of the noise on the current, from `0` (clean) to about `1` (noise as
+  strong as the signal itself).
+- `uneven`, how much the noise level varies from base to base along the read, from `0` (the
+  same everywhere) to `1`.
 
 ##### The pore simulation
 
 Three bases sit in the pore at once and all three affect the current. Every possible 3-mer
-has its own characteristic level, and that table of $4^3 = 64$ numbers is the pore model.
+has its own characteristic current level, and that table of $4^3 = 64$ numbers is the pore model.
 A few examples from ours:
 
 ```
@@ -336,14 +341,11 @@ pore holds   A C G                ->  +0.13
                    T A C          ->  +0.07
 ```
 
-One step gives one level, so a 60-base read gives 60 levels. Each level is held for 8
-samples while the strand pauses there, and Gaussian noise is added on top. A read therefore
+One step gives one level. A sliding window of 3 over 6 bases only fits four times, and our simulator wraps the first two windows around the end of the strand, treating it as circular, so that a 60-base read gives exactly 60 levels. This is also why a base cannot be identified on its own: the level at each step depends on the bases around it as well. Each level is held for 8
+samples (`DWELL` in the notebook) while the strand pauses there, and Gaussian noise is added on top. A read therefore
 arrives as $60 \times 8 = 480$ numbers.
 
-That is exactly @fig-squiggle: the red line is those levels, the blue line is the same thing after noise, and each flat stretch is one step of the ratchet.
-
-this means that a base cannot be identified on its own, because the level at
-each step depends on the bases next to it as well.
+That is exactly @fig-squiggle: the red line is those levels, the blue dots are the same thing measured with noise, and each flat stretch is one step of the ratchet.
 
 ##### The two strands, and the adapter
 
@@ -352,7 +354,7 @@ capture, 5' to 3'. Capture the forward strand and the pore reads the forward seq
 Capture its partner and the pore reads the *reverse complement*: every base swapped for its
 pair (A-T, C-G), in the opposite order.
 
-We always want the forward strand reported, whichever one was captured:
+In our case, we always want the forward strand reported, regardless of which one was in the pore. That is the function $f$ we are trying to learn:
 
 $$
 f(\text{squiggle from } \texttt{ACGTAC}) = \texttt{ACGTAC}
@@ -361,14 +363,7 @@ f(\text{squiggle from } \texttt{GTACGT}) = \texttt{ACGTAC}
 $$
 
 Those are two different squiggles, built from different 3-mers, and $f$ has to return the
-same answer for both:
-
-```
-forward strand      A C G T A C     this is always the answer
-
-forward capture     A C G T A C     the pore reads the answer directly
-reverse capture     G T A C G T     the answer is this, complemented and reversed
-```
+same answer for both.
 
 So on a reverse capture the first base of the answer is set by current measured at the *end*
 of the read, and the last base by current measured at the start.
@@ -377,172 +372,174 @@ This split is how real sequencing works. A basecaller writes down whatever passe
 pore, and the *aligner* decides afterwards which strand it came from and flips it if needed.
 Here a single model does both jobs.
 
-Which leaves the model a problem. Two random strands are statistically identical, so nothing
-in the current levels says which of the two cases it is looking at, and without knowing that
-it cannot know whether to reverse anything. Real reads carry a sequencing **adapter**, a
-known stretch ligated on before sequencing that passes through the pore ahead of the DNA. In
-our generator, reverse captures carry a leftover adapter signal at the very start of the read
-and forward captures do not. That one feature is the only thing separating them.
+**The problem.** Two random strands look the same. Nothing in the current levels says which
+orientation the pore captured, and without that the model cannot know whether to reverse what
+it read. Real reads carry a sequencing **adapter**, a known stretch ligated on before
+sequencing that passes through the pore ahead of the DNA. In our generator, reverse captures
+carry a leftover adapter signal at the very start of the read and forward captures do not.
 
-#### From signal to sequence
+![Each strand carries its own adapter, ligated to its 5' end, and the two adapters are different. `N` stands for the adapter's own bases, paired like the rest of the molecule. The pore pulls a strand in 5' end first, so whichever strand is captured, that strand's adapter goes through ahead of the DNA. The partner's 5' end is the right-hand end of the duplex, which is why it enters the pore as `GTACGT` and why its label is printed mirrored in the top panel.](assets/orientation-adapter.png){#fig-orientation width=65% fig-pos="H"}
 
-The model turns one read into one sequence. It is worth walking the whole path once, because
-every shape in it comes back later.
+#### From signal to tokens
 
-**The input.** One read is the 480 current samples of @fig-squiggle. Write it $s$:
+The model turns one read into one sequence.
+
+**The input.** One read is 480 current samples. @fig-squiggle is the same picture for a shorter, 12-base strand. Write the read $s$:
 
 $$ s \;=\; [\,s_1,\, s_2,\, \ldots,\, s_{480}\,] \;\in\; \mathbb{R}^{480} $$
 
-**Step 1, tokenization.** Individual samples are the wrong unit to reason with. There are 60
-ratchet steps and 8 samples belong to each, so the first layer takes one step's 8 samples and
-turns them into a single vector of width $d$, called a **token**:
+**Tokenization.** There are 60 ratchet steps and 8 samples belong to each, so the read is cut
+into 60 chunks of 8. Each chunk is a **token**: the unit the model reasons about, the way a
+word is the unit in a language model.
 
-$$ \underbrace{[\,s_1,\ldots,s_8\,]}_{\text{step 1}} \;\longrightarrow\; x_1 \in \mathbb{R}^{d}
+**Embedding.** A token is 8 raw numbers, which is not something attention can work with. The
+**embedding** turns each token into a vector of width $d$:
+
+$$ \underbrace{[\,s_1,\ldots,s_8\,]}_{\text{token 1}} \;\longrightarrow\; x_1 \in \mathbb{R}^{d}
 \qquad
-\underbrace{[\,s_9,\ldots,s_{16}\,]}_{\text{step 2}} \;\longrightarrow\; x_2 \in \mathbb{R}^{d} $$
+\underbrace{[\,s_9,\ldots,s_{16}\,]}_{\text{token 2}} \;\longrightarrow\; x_2 \in \mathbb{R}^{d} $$
 
-Do that for all 60 steps and stack the results as rows. That matrix is the model's working
-representation of the read:
+Keeping the two apart matters, because Tutorial 4 did the second one differently. There a token
+was a word and the embedding was a lookup in a learned table, one row per word, which works
+because there are finitely many words. A token here is 8 real numbers, so there is no table to
+look up: a convolution of width 8 and stride 8 computes the vector instead, the Task 1 trick
+again, stepping one ratchet step at a time. Same role in the pipeline, different mechanism. The
+notebook's `Tokenizer` layer does both steps.
+
+We do that for all 60 tokens and stack the results as rows. That matrix is the model's representation of the read:
 
 $$ X \;=\; \begin{bmatrix} x_1 \\ x_2 \\ \vdots \\ x_{60} \end{bmatrix} \;\in\; \mathbb{R}^{60 \times d} $$
 
-$d$ is yours to choose and is called `d_model`. The layer that does this is a convolution of
-width 8 and stride 8, the Task 1 trick again, stepping one ratchet step at a time.
-
-One caution about the word. In Tutorial 4 a token was a word and the **embedding** was a
-lookup in a learned table, one row per word in a fixed vocabulary. There is no vocabulary
-here and no lookup: the current values are already numbers, and the convolution *computes*
-each token from them. Same role in the pipeline, different mechanism.
-
-**Step 2, the stack.** Each encoder block takes 60 rows and returns 60 rows of the same
-width, so $X$ keeps its shape all the way through. What changes is the contents of each row,
-which is where self-attention comes in below.
-
-**Step 3, the head and the answer.** A `Linear` layer maps each row to 4 numbers, one per
-base:
-
-$$ O \;\in\; \mathbb{R}^{60 \times 4} $$
-
-Row $i$ holds the model's four scores for step $i$. These are raw scores, not probabilities:
-higher means more confident. A `softmax` over a row turns it into four probabilities that sum
-to 1, and the largest one is the base we call. Taking the first two rows as an example:
-
-$$
-\begin{array}{c|cccc|c}
- & \texttt{A} & \texttt{C} & \texttt{G} & \texttt{T} & \\\hline
-\text{scores, step } 1 & 2.7 & -0.4 & 0.1 & -1.2 & \\
-\text{probabilities}   & 0.87 & 0.04 & 0.06 & 0.02 & \Rightarrow\; \texttt{A} \\\hline
-\text{scores, step } 2 & -0.9 & 0.2 & 3.1 & 0.0 & \\
-\text{probabilities}   & 0.02 & 0.05 & 0.90 & 0.03 & \Rightarrow\; \texttt{G}
-\end{array}
-$$
-
-Reading the winner off all 60 rows gives the called sequence $\hat{y}$, which is what we
-compare against the true sequence $y$:
-
-$$
-\hat{y} = \texttt{A}\,\texttt{G}\,\ldots \qquad\text{against}\qquad y = \texttt{A}\,\texttt{C}\,\ldots
-$$
-
-**What the loss is computed on.** Not on the letters. Accuracy compares $\hat{y}$ with $y$,
-but you cannot train on it, because taking the largest entry throws away how confident the
-model was and gives no gradient. The loss instead reads $O$ directly: at each of the 60
-positions it takes the probability the model assigned to the *correct* base and penalises it
-for being small. That is **cross-entropy**, one value per position, averaged over the 60
-positions and over the batch.
-
-Task 1 did the two-choice version of exactly this, where `sigmoid` produced one probability
-and `BCEWithLogitsLoss` measured how wrong it was. Here `softmax` and `nn.CrossEntropyLoss`
-do the four-choice version. As with `BCEWithLogitsLoss`, the softmax is applied inside the
-loss, so your model's head must output the raw scores $O$ with no softmax after it.
+$d$ is yours to choose and is called `d_model`. From here on we follow the usual shorthand and
+call the vector $x_i$ "token $i$" as well.
 
 #### Self-attention
 
-This is the mechanism from Tutorial 4. Each token $x_i$ produces a query, a key and a value, and the attention weight from token $i$ to token $j$ compares $i$'s query with $j$'s key, scaled by the key width $d_k$:
+Each token $x_i$ produces a query, a key and a value, and the attention weight from token $i$ to token $j$ compares $i$'s query with $j$'s key, scaled by the key width $d_k$:
 
 $$
 a_{ij} = \operatorname{softmax}_j\!\left( \frac{q_i \cdot k_j}{\sqrt{d_k}} \right),
 \qquad
-z_i = \sum_{j=1}^{T} a_{ij}\, v_j .
+z_i = \sum_{j=1}^{60} a_{ij}\, v_j .
 $$
 
 The sum runs over every token $j$, so any token can draw on any other, near or far.
 
 #### Building the model
 
-You assemble the architecture the same way you assembled the CNN in Task 1, as a list of layers we provide for you applied in order:
+The model is a list of blocks applied in order:
 
 $$
-\text{signal} \;\to\; [\text{Tokenizer}] \;\to\; +[\text{Positional encoding}] \;\to\; N\times[\text{Encoder block}] \;\to\; [\text{Head}] \;\to\; \texttt{ACGT}
+\begin{aligned}
+\underbrace{\text{squiggle}}_{\text{input}}
+  \;\longrightarrow\;& [\text{Tokenizer}]
+  \;\longrightarrow\; +[\text{Positional encoding}] \\[2pt]
+  \longrightarrow\;& n_{\text{blocks}}\times[\text{Encoder block}]
+  \;\longrightarrow\; [\text{Output head}]
+  \;\longrightarrow\; \underbrace{\text{sequence}}_{\text{output}}
+\end{aligned}
 $$
 
-- **Tokenizer**: the convolution above. Turns the 480 samples into $T$ tokens of width `d_model`.
-- **Positional encoding**: attention alone has no notion of order, so a fixed position signature is added to each token. As in the tutorial it is added to the tokens, not applied as a layer.
-- **Encoder block**: self-attention followed by a small per-token network, plus several things that keep a deep stack trainable. You stack `n_layers` of them.
-- **Head**: a `Linear` layer turning each token into its 4 scores, like the `Linear(..., 1)` that ended your CNN in Task 1, with 4 outputs instead of 1.
+| block | what it does |
+|:--------------------|:--------------------------------------------------------------------|
+| Tokenizer | the convolution above: turns the 480 samples into 60 tokens. |
+| Positional encoding | *adds* a fixed position signature to each token rather than replacing it, so a token keeps its width. Attention on its own has no notion of order. |
+| Encoder block | self-attention, then a small per-token network, plus several things that keep a deep stack trainable. You stack as many of them as you choose, one feeding into the next. |
+| Output head | turns each token into its 4 scores, like the `Linear` layer that ended your CNN in Task 1, with 4 outputs instead of 1. |
 
-The notebook gives you these as classes. Their constructors take exactly the sizes above:
+Section 3 of the notebook has the code for all of them, and explains the settings each one
+takes: how wide a token is, how many encoder blocks you stack, and so on.
 
-```
-Tokenizer(d_model)                        PositionalEncoding(d_model)
-EncoderBlock(d_model, n_heads, d_ff)      nn.Linear(d_model, 4)
-```
+#### Model output and loss
 
-Your architecture decisions are four sizes:
+**Model output.** After the encoder blocks, a `Linear` layer maps each token to 4 numbers, one
+per base. Stacked, they form a matrix we call $O$, laid out like the one-hot encoding of Task 1:
 
-| setting | what it controls |
-|---|---|
-| `d_model` | the width of a token. Every token carries this many numbers, from the tokenizer all the way to the head. |
-| `n_layers` | how many encoder blocks you stack, one feeding into the next. |
-| `n_heads` | how many attention patterns each block computes side by side, the *heads* from Tutorial 4. They divide `d_model` between them, so `d_model` must be a multiple of `n_heads`. |
-| `d_ff` | the width of the small per-token network inside each block. It is normally a small multiple of `d_model`. |
+$$ O \;\in\; \mathbb{R}^{60 \times 4} $$
 
+Row $i$ holds the four scores for the $i$-th base of the answer. These are raw scores, not probabilities:
+higher means more confident. A `softmax` over a row turns it into four probabilities that sum
+to 1, and the largest one is the base we call.
+
+$$
+\begin{array}{c|cccc|c}
+ & \texttt{A} & \texttt{C} & \texttt{G} & \texttt{T} & \\\hline
+\text{scores, base } 1 & 2.7 & -0.4 & 0.1 & -1.2 & \\
+\text{probabilities}   & 0.88 & 0.04 & 0.06 & 0.02 & \Rightarrow\; \texttt{A} \\\hline
+\end{array}
+$$
+
+Reading the winner off all 60 tokens gives the called sequence $\hat{y}$, which is what we
+compare against the true sequence $y$:
+
+$$
+\hat{y} = \texttt{A}\,\texttt{G}\,\ldots \qquad\text{against}\qquad y = \texttt{A}\,\texttt{C}\,\ldots
+$$
+
+**Loss.** Accuracy compares $\hat{y}$ with $y$,
+but you cannot train on it, because taking only the largest entry throws away how confident the
+model was and gives no gradient. The loss instead uses $O$ directly: at each of the 60
+positions it takes the probability the model assigned to the *correct* base and penalises it
+for being small. That is **cross-entropy**, one value per position, averaged over the 60
+positions and over the batch.
+
+Task 1 did the two-choice version of exactly this. Here, the softmax is applied inside the
+loss, so your model's output head must output the raw scores $O$ with no softmax after it.
 
 #### Instructions
 
-Work through `task-2.ipynb` in order. Each step corresponds to one section of the notebook.
+Work through `task-2.ipynb` in order. Each part corresponds to one section of the notebook.
 
 *A.* **Look at the data** (Section 1). Plot a few reads (forward and reverse) and their labels. Look at the adapter signal and see how it separates the two orientations.
 
 *Q10* What separates a forward capture from a reverse one in the signal? And on a reverse capture, which part of the signal determines the first base you have to report?
 
-*B.* **Run the CNN** (Section 2). It is written out for you, since you built one in Task 1. Train it and read the two orientation columns separately. `evaluate` reports overall accuracy and the two orientations separately.
+*B.* **Run the CNN** (Section 2).
 
-*Q11* Report your CNN's accuracy overall and on each orientation, and explain the result. What property of a convolutional architecture is responsible, and would adding more filters help?
+*Q11* Report your CNN's accuracy overall and on each orientation, and explain the result. What property of a convolutional architecture is responsible, and would adding more filters (`C`) help?
 
-*C.* **Build the Transformer** (Section 3, `TODO-1` and `TODO-2`). Assemble it from the provided layers, choose your sizes, and train it on the same data. Note the parameter counts that `train` prints, since the two models are deliberately close in size.
+*C.* **Train the Transformer** (Section 3, `TODO-1`). Choose your sizes, and train it on the same data.
 
 *Q12* Report your Transformer's accuracy next to your CNN's. What changed, and what does that tell you about the two architectures?
 
-*D.* **Choose an architecture** (Section 4, `TODO-3`). Vary the model sizes and the data settings, and keep the runs you need to justify a choice. Then train your chosen model in the graded regime, `noise=0.5, hetero=0.6`.
+*D.* **Choose a configuration** (Section 4, `TODO-2`). Vary the model sizes and the data settings. Save your best model at the end of Section 4 and include the resulting `basecaller.pt` in your submission. That file will be used for grading and will be tested under different noise conditions.
 
-*Q13* Report your final architecture (`d_model`, `n_heads`, `n_layers`, `d_ff`, and total parameters) and justify it with your plots, including accuracy against noise for at least two model sizes.
+*Q13* Report your final configuration (`d_model`, `n_heads`, `n_blocks`, `d_ff`, and total parameters) and justify it with your plots, including accuracy against noise for at least two model sizes.
 
-*E.* **Ablation** (Section 5, `TODO-4`). Predict what removing the positional encoding will do to each orientation, then rebuild with `use_pe=False`, keeping every other size fixed, and retrain.
+*E.* **Ablation** (Section 5, `TODO-3`). An *ablation* removes one part of a working model and retrains without it, so that whatever performance is lost can be attributed to that part. Here the part is the positional encoding: rebuild with `use_pe=False`, keeping every other size fixed, and retrain.
 
-*Q14* State the prediction you made, report both orientations with and without the positional encoding, and explain the difference.
+*Q14* Report both orientations with and without the positional encoding. Account for what changed, and for any difference between the two orientations.
 
-*F.* **Look inside it** (Section 6). Run the attention plot on a reverse capture and work out which head is doing which job.
+{{< pagebreak >}}
 
-*Q15* Which head in your model is doing what, and what gave each one away? Relate this to your answer in *Q11*. Does a large attention weight prove the model used the position it points at? Say what evidence would settle it.
+#### Reading attention maps
 
-#### Two notes on Section 6
+Look again at what self-attention computes: $z_i = \sum_j a_{ij} v_j$. The new vector for
+token $i$ is a weighted average of the values from *every* token, and $a_{ij}$ is the weight
+on token $j$. So each of those numbers answers something concrete: **when the model computed
+the new vector for token $i$, how much of it came from token $j$?**
 
-**Attention weights are not proof of use.** A bright pattern shows where attention weight went, not that the model used what it found there. Information also travels through the residual connections, and the prediction is read off the last block rather than the one you plot. Whether attention weights count as an explanation at all is an open argument in the literature (Jain and Wallace, 2019; Wiegreffe and Pinter, 2019). This is why the ablation in step *E* carries more weight than the picture in step *F*: breaking something and watching accuracy fall is evidence of a different kind.
+Those weights come from a softmax over $j$, so row $i$ is a distribution over where token $i$
+drew its information from: spread evenly it would be $1/60 \approx 0.017$ in every cell, and a
+bright cell means token $i$ took most of its input from one place.
 
-**The orientation rule is a teaching device.** A real basecaller reports whatever strand went through the pore and never complements anything, because matching a read to the right strand of a reference genome happens later, during alignment. We folded that step into the model so the task would contain one long-range dependency you can see and study. The mirroring is real bookkeeping. The adapter that flags which reads need it is our invention.
+One read gives $60 \times 60$ of these numbers per head. Drawn as an image, with row $i$ down
+the page, column $j$ across it and brightness for $a_{ij}$, it shows where all 60 tokens looked
+at once. Three patterns are worth recognising on sight: a **main diagonal**, each token
+attending to itself and its neighbours; a **vertical stripe**, every token attending to the
+same one column; and an **anti-diagonal**, token $i$ attending to token $59-i$.
 
-#### Theoretical question
+![The three shapes, drawn by hand rather than taken from a model. A trained head may show one of them, a mixture, or nothing recognisable at all.](assets/attention-shapes.png){#fig-shapes width=100% fig-pos="H"}
+
+{{< pagebreak >}}
+
+*F.* **Attention Maps** (Section 6, `TODO-4`). Plot the attention maps on a reverse read to see which attention heads are active. Then silence each head in turn and re-score, so you can compare what the maps suggest against what the model actually learnd. Whether attention weights count as an explanation at all is an open argument in the literature.
+
+*Q15* Is it possible/impossible to identify specific attention heads that are specifically responsible for the orientation? How can you tell? What do the attention maps show, and how does that relate to your answer in *Q11*?
+
+#### Theoretical questions
 
 *Q16* In a short paragraph, relate self-attention here to its use in protein language models, which attend across amino-acid residues. Why is the ability to look across a whole sequence useful in biology?
-
-#### Model performance (competitive factor)
-
-Part of the grade rewards accuracy in a fixed, harder regime (`noise=0.5, hetero=0.6`). Because `evaluate` draws from a fixed seed, every submission is scored on identical reads. Report your final accuracy.
-
-#### Compute for this task
-
-Use a GPU for this task, as in Task 1 (see @sec-gpu). A 3,000-step run then takes about a minute on a free Colab GPU. The reads are generated on the CPU, and on Colab that generation sets the pace rather than the GPU, so a larger model costs very little extra time. What costs you is the number of runs. Debug with `steps` cut to a few dozen before launching a sweep.
 
 {{< pagebreak >}}
 
@@ -554,17 +551,18 @@ final_project_ID1_ID2.zip
 ├── src/                 # your code files
 │   ├── task-1/task-1.ipynb   # Task 1: CNN for RNA-protein binding sites
 │   ├── task-2/task-2.ipynb   # Task 2: Transformer for nanopore basecalling
+│   ├── task-2/basecaller.pt  # Task 2: the trained model you want graded
 │   ├── any other code files for reproducibility...
 ├── llm_chats/           # exported LLM conversations (see note below)
 └── report_ID1_ID2.pdf   # < 5 pages + charts
 ```
 
-Do not include any data files in the submission, as they are very large and already available for download.
+Do not include any data files in the submission, as they are very large and already available for download. `basecaller.pt` is not a data file - it is a few megabytes of model weights, and it must be there.
 
 **LLM chat logs.** As in HW1 and HW2: if you used LLMs (e.g. ChatGPT, Claude, Gemini, Copilot) at any stage, export the full conversation(s) into `llm_chats/` (PDF, Markdown, or a `.txt` with shareable links).
 
 ### Written report guidelines
-The report should be a concise summary of your work, it should show your understanding of the model, results and reasoning behind your decisions. No need to include code, any equations or algorithms used should be mentioned if we saw them in class or explained otherwise.
+The report should be a concise summary of your work. It should show your understanding of the model, results and reasoning behind your decisions. No need to include code, any equations or algorithms used should be mentioned if we saw them in class or explained otherwise.
 
 - **Content**: 
   - Include your names and IDs on the first page
@@ -574,7 +572,7 @@ The report should be a concise summary of your work, it should show your underst
 - **Length**: Maximum 5 pages (excluding charts, figures and tables; equations count towards length).
 - **Font**: Readable (e.g., Arial) with a minimum size of 11pt and standard margins.
 - **Explanations**: Provide clear, short explanations for your model choices, esp. if they diverge from what we've seen in class. Include any challenges you faced and how you solved them.
-- **Charts**: Include relevant figures, make sure they are clear and labeled, and provide a brief explanation of how it relates to your results.
+- **Charts**: Include relevant figures, make sure they are clear and labeled, and provide a brief explanation of how they relate to your results.
 
 ### Grading rubric
 
@@ -583,23 +581,23 @@ The report should be a concise summary of your work, it should show your underst
 | Written Report                                                               | 30  |
 | Full implementation of the models                                            | 30  |
 | Theoretical Questions                                                        | 20  |
-| Model performance (competitive factor)                                       | 15  |
+| Model performance                                                            | 15  |
 | Results reproducibility                                                      | 5   |
 
 
 ### Academic integrity & help
 * Use any online docs or LLMs, do not share code or prompts across pairs.
-* Post questions in the Final project Moodle forum. Emails regarding the project will not be answered. For Private issues email the TA.
+* Post questions in the Final project Moodle forum. Emails regarding the project will not be answered. For private issues email the TA.
 
 Good luck!
 
 ### FAQ
 
-Q: Can I use Kaggle/Collab?
+Q: Can I use Kaggle/Colab?
 A: You may use any platform for development, but your final submission should follow the required folder structure and include files as specified.
 
 Q: What libraries can I use?
-A: You may use any library, but you cannot use any pre-built models - in particular, assemble the Transformer from the provided building blocks rather than using `torch.nn.Transformer`.
+A: You may use any library, but you cannot use any pre-built models - in particular, assemble the Transformer from the provided blocks rather than using `torch.nn.Transformer`.
 
 Q: Do I need a GPU to run this assignment?
 A: Using a GPU will significantly speed up training times for both tasks. You should use the free GPUs available on platforms like Google Colab or Kaggle.
