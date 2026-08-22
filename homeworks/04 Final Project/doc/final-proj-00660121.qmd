@@ -261,7 +261,7 @@ Each filter gives you one logo. Some will show a clear preference and others wil
 
 **In short:** apply the filter, keep the windows that score above the cutoff, count them into a PWM, draw the logo.
 
-*E.* **Read a motif off the model.** Complete the readout in `task-1.ipynb` (Section 3.1, `TODO-3`) by assembling the provided helpers. Export a handful of filters, turn them into logos with [WebLogo](https://weblogo.berkeley.edu/logo.cgi), and include two or three in your report. Expect some to come out flat: a filter that learned nothing is a result too.
+*E.* **Read a motif off the model.** Complete the readout in `task-1.ipynb` (Section 3.1, `TODO-3`) by assembling the provided helpers. Export a handful of filters, turn them into logos with [WebLogo](https://weblogo.threeplusone.com/create.cgi), and include two or three in your report. Expect some to come out flat: a filter that learned nothing is a result too.
 
 *Q7* Looking at your logos: what kind of sequence does your model prefer? Which filter did you take forward to the next step, and why? What is it about its picture that made you pick it? Any outliers?
 
