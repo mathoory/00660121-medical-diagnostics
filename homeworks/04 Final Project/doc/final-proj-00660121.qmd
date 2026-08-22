@@ -506,7 +506,7 @@ Work through `task-2.ipynb` in order. Each part corresponds to one section of th
 
 *Q13* Report your final configuration (`d_model`, `n_heads`, `n_blocks`, `d_ff`, and total parameters) and justify it with your plots, including accuracy against noise for at least two model sizes.
 
-*E.* **Ablation** (Section 5, `TODO-3`). An *ablation* removes one part of a working model and retrains without it, so that whatever performance is lost can be attributed to that part. Here the part is the positional encoding: rebuild with `use_pe=False`, keeping every other size fixed, and retrain.
+*E.* **Ablation** (Section 5, `TODO-3`). An *ablation* removes one part of a working model and retrains without it, so that whatever performance is lost can be attributed to that part. Here the part is the positional encoding: rebuild with `use_pe=False`, keeping every other size fixed, and retrain. Sections 5 and 6 both work on a trained model of your choosing - say which one in your report.
 
 *Q14* Report both orientations with and without the positional encoding. Account for what changed, and for any difference between the two orientations.
 
